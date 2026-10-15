@@ -11,6 +11,10 @@ export async function GET(req: NextRequest) {
     const userId = req.headers.get("x-user-id") || searchParams.get("userId");
     const user = getSessionUser(userId);
 
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
     const status = searchParams.get("status") as any;
     const search = searchParams.get("search") || undefined;
     const departmentId = searchParams.get("departmentId") || undefined;
@@ -57,6 +61,10 @@ export async function POST(req: NextRequest) {
 
     const userId = req.headers.get("x-user-id") || body.student_id;
     const student = getSessionUser(userId);
+
+    if (!student) {
+      return NextResponse.json({ success: false, error: "Authenticated student profile required to submit a query." }, { status: 401 });
+    }
 
     const categories = db.getCategories();
     const departments = db.getDepartments();

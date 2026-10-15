@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "staff-copilot") {
-      if (user.role === "STUDENT") {
+      if (!user || user.role === "STUDENT") {
         return NextResponse.json({ success: false, error: "Unauthorized access." }, { status: 403 });
       }
       const ticket = db.getTicketById(body.ticketId);

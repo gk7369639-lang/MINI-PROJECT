@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
           Reset Your Password
         </h2>
         <p className="mt-1 text-xs text-slate-500">
-          Enter your registered institutional email and we'll send a recovery link
+          Enter your registered institutional email and we&apos;ll send a recovery link
         </p>
       </div>
 

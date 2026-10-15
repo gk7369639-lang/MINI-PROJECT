@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const userId = req.headers.get("x-user-id") || searchParams.get("userId");
     const user = getSessionUser(userId);
 
-    if (user.role === "STUDENT") {
+    if (!user || user.role === "STUDENT") {
       return NextResponse.json({ success: false, error: "Unauthorized access." }, { status: 403 });
     }
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const userId = req.headers.get("x-user-id") || body.userId;
     const user = getSessionUser(userId);
 
-    if (user.role !== "DEPARTMENT_HEAD" && user.role !== "ADMIN") {
+    if (!user || (user.role !== "DEPARTMENT_HEAD" && user.role !== "ADMIN")) {
       return NextResponse.json({ success: false, error: "Only Department Heads or Admins can make approval decisions." }, { status: 403 });
     }
 
@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest) {
     const userId = req.headers.get("x-user-id") || body.userId;
     const user = getSessionUser(userId);
 
-    if (user.role === "STUDENT") {
+    if (!user || user.role === "STUDENT") {
       return NextResponse.json({ success: false, error: "Students cannot submit approval requests." }, { status: 403 });
     }
 

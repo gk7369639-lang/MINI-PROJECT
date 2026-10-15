@@ -27,13 +27,13 @@ export default function StaffPortalPage() {
   const [activeTab, setActiveTab] = useState<"assigned" | "department" | "overdue" | "all">("assigned");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const activeUserId = "user-staff-1"; // Dr. Ramesh Kumar (Academic Affairs)
+  const [activeUserId, setActiveUserId] = useState<string>("user-staff-1");
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (uid: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/tickets?userId=${activeUserId}`, {
-        headers: { "x-user-id": activeUserId },
+      const res = await fetch(`/api/tickets?userId=${uid}`, {
+        headers: { "x-user-id": uid },
       });
       const data = await res.json();
       if (data.success && data.tickets) {
@@ -47,7 +47,10 @@ export default function StaffPortalPage() {
   };
 
   useEffect(() => {
-    fetchTickets();
+    const saved = localStorage.getItem("sqrp_active_user_id");
+    const uid = saved || "user-staff-1";
+    if (saved) setActiveUserId(saved);
+    fetchTickets(uid);
   }, []);
 
   const myAssignedTickets = tickets.filter((t) => t.assigned_to === activeUserId);

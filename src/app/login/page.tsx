@@ -3,11 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, ArrowRight, ShieldCheck, UserCheck, GraduationCap, Briefcase, Lock, Mail, AlertCircle } from "lucide-react";
+import { Sparkles, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
-import { DEMO_ACCOUNTS } from "@/lib/auth/session";
+import { Card, CardContent, CardFooter } from "@/components/ui/Card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,40 +21,27 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Find matching user from demo accounts or store
-      const match = DEMO_ACCOUNTS.find((a) => a.email.toLowerCase() === email.trim().toLowerCase());
-      if (!match) {
-        setError("Invalid email or credentials. Use one of the quick test accounts below or verify your email.");
-        setLoading(false);
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.error || "Authentication failed. Please verify your email and password.");
         return;
       }
 
-      // Set cookie and local storage
-      localStorage.setItem("sqrp_active_user_id", match.id);
-      localStorage.setItem("sqrp_active_role", match.role);
-      document.cookie = `sqrp_user_id=${match.id}; path=/; max-age=86400`;
+      localStorage.setItem("sqrp_active_user_id", data.user.id);
+      localStorage.setItem("sqrp_active_role", data.user.role);
 
-      // Redirect by role
-      if (match.role === "STUDENT") router.push("/student");
-      else if (match.role === "STAFF") router.push("/staff");
-      else if (match.role === "DEPARTMENT_HEAD") router.push("/department-head");
-      else if (match.role === "ADMIN") router.push("/admin");
+      router.push(data.redirectUrl || "/student");
     } catch (err: any) {
-      setError(err.message || "An unexpected login error occurred.");
+      setError(err.message || "An unexpected error occurred during sign in.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickLogin = (acc: (typeof DEMO_ACCOUNTS)[0]) => {
-    localStorage.setItem("sqrp_active_user_id", acc.id);
-    localStorage.setItem("sqrp_active_role", acc.role);
-    document.cookie = `sqrp_user_id=${acc.id}; path=/; max-age=86400`;
-
-    if (acc.role === "STUDENT") router.push("/student");
-    else if (acc.role === "STAFF") router.push("/staff");
-    else if (acc.role === "DEPARTMENT_HEAD") router.push("/department-head");
-    else if (acc.role === "ADMIN") router.push("/admin");
   };
 
   return (
@@ -117,29 +103,6 @@ export default function LoginPage() {
                 Sign In to SQRP
               </Button>
             </form>
-
-            {/* Quick 1-Click Demo Logins */}
-            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-              <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center mb-3">
-                1-Click Evaluator Demo Sign In:
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <button
-                    key={acc.id}
-                    onClick={() => handleQuickLogin(acc)}
-                    className="p-2.5 rounded-lg border border-slate-200 hover:border-primary-500 hover:bg-primary-50/50 dark:border-navy-800 dark:hover:bg-navy-900 transition-all text-left group"
-                  >
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-primary-600 truncate">
-                      {acc.name.split(" ")[0]}
-                    </p>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                      {acc.role.replace("_", " ")}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
           </CardContent>
           <CardFooter className="justify-center text-xs text-slate-500">
             <span>New Student? </span>

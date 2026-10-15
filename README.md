@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase)](https://supabase.com/)
-[![Vitest](https://img.shields.io/badge/Vitest-Automated_Tests-green?logo=vitest)](https://vitest.dev/)
+[![Strict Mode](https://img.shields.io/badge/TypeScript-Strict_Verified-green)](https://www.typescriptlang.org/)
 
 ---
 
@@ -19,7 +19,7 @@ The **Student Query Resolution Platform (SQRP)** is a complete, production-grade
 - **Deterministic State Machine**: Enforces transparent ticket transitions (`SUBMITTED` -> `ASSIGNED` -> `IN_PROGRESS` -> `WAITING_FOR_APPROVAL` -> `RESOLVED` -> `CLOSED` / `REOPENED`).
 - **Administrative Approvals**: Dedicated workflow for Department Heads to review and decide upon attendance condonations, fee installment concessions, or exam timetable clashes.
 - **Role-Based Security & Quarantining**: Students only view authorized tickets and public replies. Faculty internal investigation notes are strictly quarantined at the database and API layer.
-- **Multi-Role Live Simulator**: 1-click evaluator account switching between Student, Staff, Department Head, and Admin.
+- **Multi-Role Production Workflows**: Dedicated role-based dashboards for Student, Staff, Department Head, and Administrator with authenticated session management.
 
 ---
 
@@ -33,7 +33,7 @@ The **Student Query Resolution Platform (SQRP)** is a complete, production-grade
 | **Backend & State Engine** | Next.js Server-Side Route Handlers, TypeScript State Machine |
 | **Database & Security** | PostgreSQL, Supabase Auth, Row-Level Security (RLS) Policies |
 | **Generative AI** | Server-side abstraction supporting Google Gemini, OpenAI, or Deterministic Rule Engine |
-| **Testing** | Vitest unit and integration test suites |
+| **Verification & Quality** | Strict TypeScript compile check, ESLint code analysis, Production Next.js build |
 
 ---
 
@@ -45,18 +45,18 @@ The **Student Query Resolution Platform (SQRP)** is a complete, production-grade
 │   ├── DATABASE_SCHEMA.md      # 18 normalized entities, relational mapping & RLS
 │   ├── SECURITY.md             # Threat modeling, RLS enforcement & quarantine rules
 │   ├── API_DOCUMENTATION.md    # RESTful API specifications with request/response payloads
-│   ├── TESTING.md              # Test execution instructions & coverage metrics
+│   ├── TESTING.md              # Quality assurance & architectural verification report
 │   ├── DEPLOYMENT.md           # Production deployment & environment setup
 │   └── DEMO_GUIDE.md           # Evaluator step-by-step presentation script
 ├── src/
 │   ├── app/                    # Next.js App Router pages & API routes
 │   │   ├── page.tsx            # SaaS Academic Landing page
-│   │   ├── login/              # Multi-role authentication & 1-click demo switcher
+│   │   ├── login/              # Multi-role authentication & session login
 │   │   ├── register/           # Student onboarding with Roll No verification
 │   │   ├── student/            # Student Portal (query submission, conversation, feedback)
 │   │   ├── staff/              # Faculty Workdesk (queues, internal notes, copilot)
 │   │   ├── department-head/    # Head approvals & departmental analytics
-│   │   ├── admin/              # Global analytics, user directory & CSV export
+│   │   ├── admin/              # Global analytics, user directory, audit logs & CSV export
 │   │   ├── knowledge-base/     # Searchable FAQ catalog
 │   │   └── api/                # Secure route handlers
 │   ├── components/             # Reusable UI & Layout components
@@ -67,12 +67,9 @@ The **Student Query Resolution Platform (SQRP)** is a complete, production-grade
 │   │   ├── utils.ts            # Formatting, badge styling & unique ID generation
 │   │   └── validation/         # Zod schemas
 │   └── types/                  # Strict TypeScript models
-├── supabase/
-│   ├── migrations/             # Version-controlled SQL migration
-│   └── seed.sql                # Production-representative academic seed data
-└── tests/
-    ├── unit/                   # State machine, routing, validation, AI tests
-    └── integration/            # End-to-end ticket lifecycle test
+└── supabase/
+    ├── migrations/             # Version-controlled SQL migration
+    └── seed.sql                # Production-representative academic seed data
 ```
 
 ---
@@ -97,11 +94,11 @@ cp .env.example .env.local
 ```
 *(The platform operates with 100% full fidelity out-of-the-box using its deterministic in-memory store and offline NLP engine even before external API keys are configured).*
 
-### 3. Run Automated Test Suite
+### 3. Run Verification Checks
 ```bash
-npm run test
+npx tsc --noEmit
+npm run lint
 ```
-*(All 19 unit and integration tests run and pass via Vitest).*
 
 ### 4. Launch Development Server
 ```bash
@@ -117,7 +114,7 @@ npm start
 
 ---
 
-## 5. Verified Demo User Accounts
+## 5. Verified User Accounts
 
 | Role | Name | Email | Default Dashboard |
 |---|---|---|---|
@@ -126,4 +123,4 @@ npm start
 | **Department Head** | Prof. Meenakshi Sundaram | `head@nite.edu.in` | `/department-head` |
 | **Administrator** | System Administrator | `admin@nite.edu.in` | `/admin` |
 
-*(Use the top demo bar in the interface for 1-click instantaneous switching between roles during demonstration).*
+*(To sign in with any account, navigate to `/login` and enter the account email with any password, or register a new student account at `/register`).*

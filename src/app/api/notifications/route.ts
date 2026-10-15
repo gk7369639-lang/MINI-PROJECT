@@ -8,6 +8,10 @@ export async function GET(req: NextRequest) {
     const userId = req.headers.get("x-user-id") || searchParams.get("userId");
     const user = getSessionUser(userId);
 
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
     const notifications = db.getNotifications(user.id);
     return NextResponse.json({ success: true, notifications });
   } catch (err: any) {
@@ -20,6 +24,10 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const userId = req.headers.get("x-user-id") || body.userId;
     const user = getSessionUser(userId);
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
 
     if (body.markAll) {
       db.markAllNotificationsAsRead(user.id);

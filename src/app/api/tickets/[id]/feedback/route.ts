@@ -14,6 +14,10 @@ export async function POST(
     const userId = req.headers.get("x-user-id") || body.userId;
     const user = getSessionUser(userId);
 
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
     const result = db.submitFeedback(params.id, user.id, validated.rating, validated.comment);
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });

@@ -30,13 +30,13 @@ export default function DepartmentHeadApprovalsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const activeUserId = "user-head-1"; // Prof. Meenakshi Sundaram
+  const [activeUserId, setActiveUserId] = useState<string>("user-head-1");
 
-  const fetchApprovals = async () => {
+  const fetchApprovals = async (uid: string = activeUserId) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/approvals?userId=${activeUserId}`, {
-        headers: { "x-user-id": activeUserId },
+      const res = await fetch(`/api/approvals?userId=${uid}`, {
+        headers: { "x-user-id": uid },
       });
       const data = await res.json();
       if (data.success && data.approvals) {
@@ -50,7 +50,10 @@ export default function DepartmentHeadApprovalsPage() {
   };
 
   useEffect(() => {
-    fetchApprovals();
+    const saved = localStorage.getItem("sqrp_active_user_id");
+    const uid = saved || "user-head-1";
+    if (saved) setActiveUserId(saved);
+    fetchApprovals(uid);
   }, []);
 
   const handleOpenDecisionModal = (req: ApprovalRequest, dec: ApprovalStatus) => {

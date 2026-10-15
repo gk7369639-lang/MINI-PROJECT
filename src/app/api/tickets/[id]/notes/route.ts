@@ -14,7 +14,7 @@ export async function POST(
     const userId = req.headers.get("x-user-id") || body.userId;
     const user = getSessionUser(userId);
 
-    if (user.role === "STUDENT") {
+    if (!user || user.role === "STUDENT") {
       return NextResponse.json({ success: false, error: "Students are strictly prohibited from writing internal notes." }, { status: 403 });
     }
 

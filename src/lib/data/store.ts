@@ -242,245 +242,7 @@ class DataRepository {
     },
   ];
 
-  private tickets: Ticket[] = [
-    {
-      id: "ticket-101",
-      ticket_number: "SQRP-2026-A109B4",
-      student_id: "user-student-1",
-      student_name: "Aarav Sharma",
-      student_email: "student@nite.edu.in",
-      student_reg_no: "22BCE1045",
-      department_id: "dept-acad",
-      department_name: "Academic Affairs & Registry",
-      department_code: "ACAD",
-      category_id: "cat-att",
-      category_name: "Attendance Shortage & On-Duty (OD) Exemption",
-      category_code: "ATTENDANCE_EXEMPTION",
-      subject: "Medical OD Exemption for Hospitalization Period",
-      description: "I was hospitalized due to acute dengue fever from Sept 12 to Sept 19. My attendance in CS301 dropped to 71%. I have attached the medical fitness certificate and hospital admission bill for approval.",
-      priority: "HIGH",
-      status: "WAITING_FOR_APPROVAL",
-      sla_due_at: new Date(Date.now() + 86400000).toISOString(),
-      assigned_to: "user-staff-1",
-      assigned_staff_name: "Dr. Ramesh Kumar",
-      created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-      updated_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-      messages: [
-        {
-          id: "msg-101-1",
-          ticket_id: "ticket-101",
-          sender_id: "user-student-1",
-          sender_name: "Aarav Sharma",
-          sender_role: "STUDENT",
-          message_type: "PUBLIC_REPLY",
-          content: "Please find attached the medical certificate from Apollo Hospitals verifying 7 days inpatient care.",
-          created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-        },
-        {
-          id: "msg-101-2",
-          ticket_id: "ticket-101",
-          sender_id: "user-staff-1",
-          sender_name: "Dr. Ramesh Kumar",
-          sender_role: "STAFF",
-          message_type: "PUBLIC_REPLY",
-          content: "Dear Aarav, I have reviewed the hospitalization documents and verified the dates with the faculty attendance log. Since this requires Dean approval for attendance below 75%, I have submitted an official approval request to the Department Head.",
-          created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-        },
-      ],
-      internal_notes: [
-        {
-          id: "note-101-1",
-          ticket_id: "ticket-101",
-          author_id: "user-staff-1",
-          author_name: "Dr. Ramesh Kumar",
-          author_role: "STAFF",
-          content: "Verified genuine hospital admission with registration ID #AH-49102. Recommendation: Grant 6% condonation as per Academic Council Regulation 8.2.",
-          created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-        },
-      ],
-      history: [
-        {
-          id: "hist-101-1",
-          ticket_id: "ticket-101",
-          changed_by: "user-student-1",
-          changer_name: "Aarav Sharma",
-          changer_role: "STUDENT",
-          old_status: null,
-          new_status: "SUBMITTED",
-          reason: "Initial submission",
-          created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-        },
-        {
-          id: "hist-101-2",
-          ticket_id: "ticket-101",
-          changed_by: null,
-          changer_name: "AI Smart Router",
-          old_status: "SUBMITTED",
-          new_status: "ASSIGNED",
-          reason: "Automated routing to Academic Affairs Staff",
-          created_at: new Date(Date.now() - 3600000 * 17).toISOString(),
-        },
-        {
-          id: "hist-101-3",
-          ticket_id: "ticket-101",
-          changed_by: "user-staff-1",
-          changer_name: "Dr. Ramesh Kumar",
-          changer_role: "STAFF",
-          old_status: "ASSIGNED",
-          new_status: "IN_PROGRESS",
-          reason: "Verified hospital records",
-          created_at: new Date(Date.now() - 3600000 * 10).toISOString(),
-        },
-        {
-          id: "hist-101-4",
-          ticket_id: "ticket-101",
-          changed_by: "user-staff-1",
-          changer_name: "Dr. Ramesh Kumar",
-          changer_role: "STAFF",
-          old_status: "IN_PROGRESS",
-          new_status: "WAITING_FOR_APPROVAL",
-          reason: "Forwarded to Academic Head for medical condonation waiver",
-          created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-        },
-      ],
-      approval_requests: [
-        {
-          id: "app-101-1",
-          ticket_id: "ticket-101",
-          ticket_number: "SQRP-2026-A109B4",
-          ticket_subject: "Medical OD Exemption for Hospitalization Period",
-          requested_by: "user-staff-1",
-          requester_name: "Dr. Ramesh Kumar",
-          department_id: "dept-acad",
-          department_name: "Academic Affairs & Registry",
-          action_type: "ATTENDANCE_CONDONATION",
-          reason: "Student hospitalized for 7 days with dengue. Exemption required to restore attendance above 75% for end-sem hall ticket.",
-          status: "PENDING",
-          created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-        },
-      ],
-    },
-    {
-      id: "ticket-102",
-      ticket_number: "SQRP-2026-C821D3",
-      student_id: "user-student-1",
-      student_name: "Aarav Sharma",
-      student_email: "student@nite.edu.in",
-      student_reg_no: "22BCE1045",
-      department_id: "dept-its",
-      department_name: "Campus IT & Infrastructure Support",
-      department_code: "ITS",
-      category_id: "cat-wifi",
-      category_name: "Campus WiFi & Portal Credentials",
-      category_code: "IT_PORTAL_ACCESS",
-      subject: "New Laptop WiFi MAC Address Binding",
-      description: "I replaced my old laptop with a MacBook Pro. Please bind my new MAC address (3C:22:FB:49:10:9A) to my student roll number so I can connect to NITE-STUDENT-5G.",
-      priority: "MEDIUM",
-      status: "RESOLVED",
-      sla_due_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-      assigned_to: "user-staff-1",
-      assigned_staff_name: "Dr. Ramesh Kumar",
-      resolution_summary: "MAC address registered on RADIUS authentication server. Device active on NITE-STUDENT-5G.",
-      resolved_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-      created_at: new Date(Date.now() - 3600000 * 30).toISOString(),
-      updated_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-      has_feedback: true,
-      messages: [
-        {
-          id: "msg-102-1",
-          ticket_id: "ticket-102",
-          sender_id: "user-student-1",
-          sender_name: "Aarav Sharma",
-          sender_role: "STUDENT",
-          message_type: "PUBLIC_REPLY",
-          content: "MAC address: 3C:22:FB:49:10:9A. Operating system: macOS Sonoma.",
-          created_at: new Date(Date.now() - 3600000 * 30).toISOString(),
-        },
-        {
-          id: "msg-102-2",
-          ticket_id: "ticket-102",
-          sender_id: "user-staff-1",
-          sender_name: "Campus IT Desk",
-          sender_role: "STAFF",
-          message_type: "PUBLIC_REPLY",
-          content: "Hello Aarav, your MAC address has been registered in the DHCP reservations table. Please disconnect and reconnect to NITE-STUDENT-5G.",
-          created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-        },
-      ],
-      history: [
-        {
-          id: "hist-102-1",
-          ticket_id: "ticket-102",
-          changed_by: "user-student-1",
-          changer_name: "Aarav Sharma",
-          changer_role: "STUDENT",
-          old_status: null,
-          new_status: "SUBMITTED",
-          reason: "Query logged",
-          created_at: new Date(Date.now() - 3600000 * 30).toISOString(),
-        },
-        {
-          id: "hist-102-2",
-          ticket_id: "ticket-102",
-          changed_by: "user-staff-1",
-          changer_name: "Campus IT Desk",
-          changer_role: "STAFF",
-          old_status: "SUBMITTED",
-          new_status: "RESOLVED",
-          reason: "MAC address added to access list",
-          created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-        },
-      ],
-    },
-    {
-      id: "ticket-103",
-      ticket_number: "SQRP-2026-F992X1",
-      student_id: "user-student-1",
-      student_name: "Aarav Sharma",
-      student_email: "student@nite.edu.in",
-      student_reg_no: "22BCE1045",
-      department_id: "dept-fin",
-      department_name: "Accounts & Finance",
-      department_code: "FIN",
-      category_id: "cat-fee-receipt",
-      category_name: "Tuition Fee Payment & Receipt Reconcile",
-      category_code: "FEE_RECEIPT_ISSUE",
-      subject: "Semester 5 Fee Payment Deducted but Receipt Not Generated",
-      description: "Rs. 65,000 was debited via HDFC Netbanking on Oct 14th with Ref #HDFC948102391. However, the ERP portal still reflects 'Fee Pending'. Please reconcile.",
-      priority: "URGENT",
-      status: "IN_PROGRESS",
-      sla_due_at: new Date(Date.now() + 3600000 * 20).toISOString(),
-      assigned_to: "user-staff-1",
-      assigned_staff_name: "Dr. Ramesh Kumar",
-      created_at: new Date(Date.now() - 3600000 * 6).toISOString(),
-      updated_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-      messages: [],
-      history: [
-        {
-          id: "hist-103-1",
-          ticket_id: "ticket-103",
-          changed_by: "user-student-1",
-          changer_name: "Aarav Sharma",
-          changer_role: "STUDENT",
-          old_status: null,
-          new_status: "SUBMITTED",
-          reason: "Query submitted",
-          created_at: new Date(Date.now() - 3600000 * 6).toISOString(),
-        },
-        {
-          id: "hist-103-2",
-          ticket_id: "ticket-103",
-          changed_by: "user-staff-1",
-          changer_name: "Accounts Desk",
-          changer_role: "STAFF",
-          old_status: "SUBMITTED",
-          new_status: "IN_PROGRESS",
-          reason: "Payment reconciliation with HDFC Bank gateway under review",
-          created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-        },
-      ],
-    },
-  ];
+  private tickets: Ticket[] = [];
 
   private knowledgeBase: KnowledgeBaseArticle[] = [
     {
@@ -530,64 +292,31 @@ class DataRepository {
     },
   ];
 
-  private notifications: NotificationItem[] = [
-    {
-      id: "notif-1",
-      user_id: "user-student-1",
-      title: "Approval Requested for Ticket #SQRP-2026-A109B4",
-      message: "Dr. Ramesh Kumar submitted your medical attendance condonation request for Department Head approval.",
-      link: "/student/tickets/ticket-101",
-      is_read: false,
-      notification_type: "APPROVAL_REQUESTED",
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-    },
-    {
-      id: "notif-2",
-      user_id: "user-head-1",
-      title: "Pending Condonation Approval",
-      message: "New approval required for ticket SQRP-2026-A109B4 from Dr. Ramesh Kumar.",
-      link: "/department-head/approvals",
-      is_read: false,
-      notification_type: "APPROVAL_REQUIRED",
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-    },
-  ];
+  private notifications: NotificationItem[] = [];
+  private feedbackList: FeedbackRecord[] = [];
+  private auditLogs: AuditLogItem[] = [];
 
-  private feedbackList: FeedbackRecord[] = [
-    {
-      id: "fb-1",
-      ticket_id: "ticket-102",
-      student_id: "user-student-1",
-      rating: 5,
-      comment: "Super quick WiFi activation! Resolved within 2 hours.",
-      created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-    },
-  ];
+  public addProfile(profile: Profile): void {
+    this.profiles.push(profile);
+  }
 
-  private auditLogs: AuditLogItem[] = [
-    {
-      id: "log-1",
-      actor_id: "user-student-1",
-      actor_name: "Aarav Sharma",
-      actor_role: "STUDENT",
-      action: "TICKET_CREATED",
-      entity_type: "TICKET",
-      entity_id: "ticket-101",
-      details: { subject: "Medical OD Exemption for Hospitalization Period" },
-      created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-    },
-    {
-      id: "log-2",
-      actor_id: "user-staff-1",
-      actor_name: "Dr. Ramesh Kumar",
-      actor_role: "STAFF",
-      action: "APPROVAL_REQUEST_SUBMITTED",
-      entity_type: "APPROVAL_REQUEST",
-      entity_id: "app-101-1",
-      details: { action_type: "ATTENDANCE_CONDONATION" },
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-    },
-  ];
+  public toggleUserStatus(userId: string): boolean {
+    const user = this.profiles.find((p) => p.id === userId);
+    if (user) {
+      user.is_active = !user.is_active;
+      return user.is_active;
+    }
+    return false;
+  }
+
+  public toggleCategoryApproval(categoryId: string): boolean {
+    const cat = this.categories.find((c) => c.id === categoryId);
+    if (cat) {
+      cat.requires_approval = !cat.requires_approval;
+      return cat.requires_approval;
+    }
+    return false;
+  }
 
   // Repository Methods
   public getDepartments(): Department[] {

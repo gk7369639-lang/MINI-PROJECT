@@ -23,14 +23,14 @@ export default function DepartmentHeadDashboard() {
   const [pendingApprovals, setPendingApprovals] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const activeUserId = "user-head-1"; // Prof. Meenakshi Sundaram (Head of Academic Affairs)
+  const [activeUserId, setActiveUserId] = useState<string>("user-head-1");
 
-  const fetchData = async () => {
+  const fetchData = async (uid: string) => {
     try {
       setLoading(true);
       const [ticketsRes, approvalsRes] = await Promise.all([
-        fetch(`/api/tickets?userId=${activeUserId}`, { headers: { "x-user-id": activeUserId } }),
-        fetch(`/api/approvals?userId=${activeUserId}`, { headers: { "x-user-id": activeUserId } }),
+        fetch(`/api/tickets?userId=${uid}`, { headers: { "x-user-id": uid } }),
+        fetch(`/api/approvals?userId=${uid}`, { headers: { "x-user-id": uid } }),
       ]);
 
       const ticketsData = await ticketsRes.json();
@@ -50,8 +50,23 @@ export default function DepartmentHeadDashboard() {
   };
 
   useEffect(() => {
-    fetchData();
+    const saved = localStorage.getItem("sqrp_active_user_id");
+    const uid = saved || "user-head-1";
+    if (saved) setActiveUserId(saved);
+    fetchData(uid);
   }, []);
+
+  const staffWorkload = React.useMemo(() => {
+    const map = new Map<string, { name: string; count: number }>();
+    tickets.forEach((t) => {
+      if (t.assigned_staff_name && !["RESOLVED", "CLOSED"].includes(t.status)) {
+        const current = map.get(t.assigned_staff_name) || { name: t.assigned_staff_name, count: 0 };
+        current.count += 1;
+        map.set(t.assigned_staff_name, current);
+      }
+    });
+    return Array.from(map.values());
+  }, [tickets]);
 
   const totalDeptTickets = tickets.length;
   const inProgressTickets = tickets.filter((t) => t.status === "IN_PROGRESS").length;
@@ -171,29 +186,30 @@ export default function DepartmentHeadDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-xs text-slate-900">Dr. Ramesh Kumar (Academic Staff)</h4>
-                  <p className="text-[11px] text-slate-500">Specialization: Attendance &amp; Medical Condonations</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-black text-primary-600">3 Active Cases</span>
-                  <p className="text-[10px] text-slate-400">100% On-time SLA</p>
-                </div>
+            {staffWorkload.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="font-semibold text-slate-600">No active queries currently assigned to department staff.</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Faculty load will display here automatically as queries are routed and assigned.</p>
               </div>
-
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-xs text-slate-900">S. Priya (Registrar Liaison)</h4>
-                  <p className="text-[11px] text-slate-500">Specialization: Transcripts &amp; Degree Verification</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-black text-primary-600">1 Active Case</span>
-                  <p className="text-[10px] text-slate-400">Optimal Load</p>
-                </div>
+            ) : (
+              <div className="space-y-4">
+                {staffWorkload.map((staff) => (
+                  <div key={staff.name} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-900">{staff.name}</h4>
+                      <p className="text-[11px] text-slate-500">Department Operational Handler</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-black text-primary-600">
+                        {staff.count} Active Case{staff.count !== 1 ? "s" : ""}
+                      </span>
+                      <p className="text-[10px] text-emerald-600 font-semibold">Active Workload</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

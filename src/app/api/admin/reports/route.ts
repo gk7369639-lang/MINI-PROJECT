@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const userId = req.headers.get("x-user-id");
     const user = getSessionUser(userId);
 
-    if (user.role !== "ADMIN" && user.role !== "DEPARTMENT_HEAD") {
+    if (!user || (user.role !== "ADMIN" && user.role !== "DEPARTMENT_HEAD")) {
       return NextResponse.json({ success: false, error: "Unauthorized access to reports." }, { status: 403 });
     }
 

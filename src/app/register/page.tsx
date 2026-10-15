@@ -35,14 +35,31 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // Simulate registration
-      setTimeout(() => {
-        setSuccess(true);
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName,
+          email,
+          studentIdNumber: regNo,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.error || "Registration failed. Please check your information.");
         setLoading(false);
-        setTimeout(() => {
-          router.push("/student");
-        }, 1200);
-      }, 600);
+        return;
+      }
+
+      setSuccess(true);
+      localStorage.setItem("sqrp_active_user_id", data.user.id);
+      localStorage.setItem("sqrp_active_role", data.user.role);
+
+      setTimeout(() => {
+        router.push(data.redirectUrl || "/student");
+      }, 1000);
     } catch (err: any) {
       setError(err.message || "Registration failed.");
       setLoading(false);

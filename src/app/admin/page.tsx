@@ -25,11 +25,15 @@ export default function AdminDashboardPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const activeUserId = "user-admin-1";
+  const [activeUserId, setActiveUserId] = useState<string>("user-admin-1");
 
   useEffect(() => {
-    fetch(`/api/tickets?userId=${activeUserId}`, {
-      headers: { "x-user-id": activeUserId },
+    const saved = localStorage.getItem("sqrp_active_user_id");
+    const uid = saved || "user-admin-1";
+    if (saved) setActiveUserId(uid);
+
+    fetch(`/api/tickets?userId=${uid}`, {
+      headers: { "x-user-id": uid },
     })
       .then((res) => res.json())
       .then((data) => {

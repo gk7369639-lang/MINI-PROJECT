@@ -19,6 +19,10 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Ticket not found." }, { status: 404 });
     }
 
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
     if (user.role === "STUDENT" && ticket.student_id !== user.id) {
       return NextResponse.json({ success: false, error: "Unauthorized access to ticket." }, { status: 403 });
     }

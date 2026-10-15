@@ -15,6 +15,10 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Ticket not found." }, { status: 404 });
     }
 
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
     // Role check: student can only view own ticket
     if (user.role === "STUDENT" && ticket.student_id !== user.id) {
       return NextResponse.json({ success: false, error: "Unauthorized access to ticket." }, { status: 403 });
@@ -40,6 +44,10 @@ export async function PATCH(
     const body = await req.json();
     const userId = req.headers.get("x-user-id") || body.userId;
     const user = getSessionUser(userId);
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
 
     const ticket = db.getTicketById(params.id);
     if (!ticket) {

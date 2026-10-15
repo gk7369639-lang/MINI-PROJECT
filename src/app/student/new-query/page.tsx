@@ -42,34 +42,21 @@ export default function NewQueryPage() {
     refinedSubject?: string;
   } | null>(null);
 
-  const activeUserId = "user-student-1";
+  const [activeUserId, setActiveUserId] = useState<string>("user-student-1");
 
   useEffect(() => {
-    // Fetch departments and categories from public state
-    fetch("/api/tickets?userId=" + activeUserId)
-      .then(() => {
-        // Mock load categories and departments from local config
-        setDepartments([
-          { id: "dept-acad", code: "ACAD", name: "Academic Affairs & Registry", description: "", contact_email: "", is_active: true, created_at: "" },
-          { id: "dept-exam", code: "EXAM", name: "Examination Cell & Evaluation", description: "", contact_email: "", is_active: true, created_at: "" },
-          { id: "dept-fin", code: "FIN", name: "Accounts & Finance", description: "", contact_email: "", is_active: true, created_at: "" },
-          { id: "dept-cse", code: "CSE", name: "Computer Science & Engineering", description: "", contact_email: "", is_active: true, created_at: "" },
-          { id: "dept-hostel", code: "HOSTEL", name: "Hostel & Residential Services", description: "", contact_email: "", is_active: true, created_at: "" },
-          { id: "dept-its", code: "ITS", name: "Campus IT & Infrastructure Support", description: "", contact_email: "", is_active: true, created_at: "" },
-        ]);
+    const saved = localStorage.getItem("sqrp_active_user_id");
+    if (saved) setActiveUserId(saved);
 
-        setCategories([
-          { id: "cat-att", department_id: "dept-acad", name: "Attendance Shortage & On-Duty (OD) Exemption", code: "ATTENDANCE_EXEMPTION", description: "", sla_hours: 48, requires_approval: true, is_active: true },
-          { id: "cat-bonafide", department_id: "dept-acad", name: "Bonafide & Official Transcripts", code: "CERTIFICATE_BONAFIDE", description: "", sla_hours: 24, requires_approval: false, is_active: true },
-          { id: "cat-hallticket", department_id: "dept-exam", name: "Hall Ticket Discrepancy", code: "HALL_TICKET_ERROR", description: "", sla_hours: 24, requires_approval: false, is_active: true },
-          { id: "cat-reval", department_id: "dept-exam", name: "Revaluation & Paper Viewing", code: "EXAM_REVALUATION", description: "", sla_hours: 72, requires_approval: true, is_active: true },
-          { id: "cat-fee-receipt", department_id: "dept-fin", name: "Tuition Fee Payment & Receipt Reconcile", code: "FEE_RECEIPT_ISSUE", description: "", sla_hours: 48, requires_approval: false, is_active: true },
-          { id: "cat-fee-installment", department_id: "dept-fin", name: "Fee Concession & Installment Permission", code: "FEE_CONCESSION", description: "", sla_hours: 72, requires_approval: true, is_active: true },
-          { id: "cat-wifi", department_id: "dept-its", name: "Campus WiFi & Portal Credentials", code: "IT_PORTAL_ACCESS", description: "", sla_hours: 12, requires_approval: false, is_active: true },
-          { id: "cat-hostel", department_id: "dept-hostel", name: "Hostel Room Maintenance", code: "HOSTEL_MAINTENANCE", description: "", sla_hours: 24, requires_approval: false, is_active: true },
-        ]);
+    fetch("/api/departments")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          if (data.departments) setDepartments(data.departments);
+          if (data.categories) setCategories(data.categories);
+        }
       })
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load departments and categories", err));
   }, []);
 
   const handleAiPreCheck = async () => {

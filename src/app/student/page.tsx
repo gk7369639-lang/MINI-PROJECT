@@ -29,13 +29,13 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
-  const activeUserId = "user-student-1";
+  const [activeUserId, setActiveUserId] = useState<string>("user-student-1");
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (uid: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/tickets?userId=${activeUserId}`, {
-        headers: { "x-user-id": activeUserId },
+      const res = await fetch(`/api/tickets?userId=${uid}`, {
+        headers: { "x-user-id": uid },
       });
       const data = await res.json();
       if (data.success && data.tickets) {
@@ -49,7 +49,10 @@ export default function StudentDashboard() {
   };
 
   useEffect(() => {
-    fetchTickets();
+    const saved = localStorage.getItem("sqrp_active_user_id");
+    const uid = saved || "user-student-1";
+    if (saved) setActiveUserId(saved);
+    fetchTickets(uid);
   }, []);
 
   const totalSubmitted = tickets.length;
