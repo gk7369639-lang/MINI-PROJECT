@@ -17,6 +17,8 @@ import {
   Check,
   Building2,
   Calendar,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +36,10 @@ export default function StudentTicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [copiedNumber, setCopiedNumber] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Reopen Modal
   const [isReopenOpen, setIsReopenOpen] = useState(false);
@@ -52,20 +58,51 @@ export default function StudentTicketDetailPage() {
   const fetchTicket = async () => {
     try {
       setLoading(true);
+      setErrorCode(null);
+      setErrorMessage(null);
       const savedId = localStorage.getItem("sqrp_active_user_id") || "user-student-1";
       setActiveUserId(savedId);
-      const res = await fetch(`/api/tickets/${ticketId}`, {
+
+      const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const token = urlParams?.get("token") || "";
+      const queryParam = token ? `?token=${encodeURIComponent(token)}` : "";
+
+      const res = await fetch(`/api/tickets/${ticketId}${queryParam}`, {
         headers: { "x-user-id": savedId },
       });
       const data = await res.json();
       if (data.success && data.ticket) {
         setTicket(data.ticket);
+      } else {
+        setTicket(null);
+        setErrorCode(data.code || (res.status === 404 ? "NOT_FOUND" : res.status === 403 ? "FORBIDDEN" : "ERROR"));
+        setErrorMessage(data.error || "Unable to retrieve ticket details.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setTicket(null);
+      setErrorCode("ERROR");
+      setErrorMessage(err.message || "Failed to load ticket.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCopyNumber = () => {
+    if (!ticket) return;
+    navigator.clipboard.writeText(ticket.ticket_number);
+    setCopiedNumber(true);
+    setTimeout(() => setCopiedNumber(false), 2000);
+  };
+
+  const handleCopyTrackingLink = () => {
+    if (!ticket) return;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const tokenPart = ticket.tracking_token ? `&token=${ticket.tracking_token}` : "";
+    const link = `${origin}/track?number=${encodeURIComponent(ticket.ticket_number)}${tokenPart}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   useEffect(() => {
@@ -198,17 +235,54 @@ export default function StudentTicketDetailPage() {
   }
 
   if (!ticket) {
+    if (errorCode === "FORBIDDEN") {
+      return (
+        <AppShell initialRole="STUDENT">
+          <div className="max-w-md mx-auto py-12 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-navy-950">Confidential Ticket Access</h2>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              This query was submitted under another student account. SQRP strictly safeguards student confidentiality—full message records are reserved for the original submitter.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+              <Link href={`/track?number=${encodeURIComponent(ticketId)}`}>
+                <Button size="sm" variant="primary">
+                  View Public Timeline
+                </Button>
+              </Link>
+              <Link href="/student">
+                <Button size="sm" variant="outline">
+                  Return to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </AppShell>
+      );
+    }
+
     return (
       <AppShell initialRole="STUDENT">
         <div className="max-w-md mx-auto py-12 text-center space-y-4">
           <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
           <h2 className="text-xl font-bold text-navy-950">Ticket Not Found</h2>
           <p className="text-xs text-slate-500">
-            This query record could not be found or you do not have permission to access it.
+            {errorMessage || `This query record "${ticketId}" could not be found or does not exist.`}
           </p>
-          <Link href="/student">
-            <Button size="sm">Return to Dashboard</Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+            <Link href={`/track?number=${encodeURIComponent(ticketId)}`}>
+              <Button size="sm" variant="outline">
+                Search Public Tracker
+              </Button>
+            </Link>
+            <Link href="/student/new-query">
+              <Button size="sm" variant="primary">
+                Submit New Query
+              </Button>
+            </Link>
+          </div>
         </div>
       </AppShell>
     );
@@ -236,6 +310,24 @@ export default function StudentTicketDetailPage() {
                 <span className="font-mono text-sm font-bold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded border border-primary-200">
                   {ticket.ticket_number}
                 </span>
+                <button
+                  type="button"
+                  onClick={handleCopyNumber}
+                  title="Copy Ticket Number"
+                  className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-navy-950 px-2 py-0.5 rounded border border-slate-200 bg-slate-50 transition"
+                >
+                  {copiedNumber ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedNumber ? "Copied" : "Copy #"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyTrackingLink}
+                  title="Copy Tracking Link"
+                  className="inline-flex items-center gap-1 text-xs text-primary-700 hover:text-primary-900 px-2 py-0.5 rounded border border-primary-200 bg-primary-50 transition"
+                >
+                  {copiedLink ? <Check className="w-3 h-3 text-emerald-600" /> : <ExternalLink className="w-3 h-3" />}
+                  <span>{copiedLink ? "Link Copied" : "Share Tracking"}</span>
+                </button>
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}
                 >

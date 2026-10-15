@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import {
   Department,
   SupportCategory,
@@ -18,11 +20,13 @@ import {
   WorkerTaskUpdate,
   QRCodeConfig,
 } from "@/types";
-import { generateTicketNumber } from "@/lib/utils";
+import { generateTicketNumber, generateTrackingToken } from "@/lib/utils";
 import { validateStateTransition } from "@/lib/state-machine";
 
-// In-Memory Database Store with Real State Management
+// Persistent Database Store with Real State Management & File Backing
 class DataRepository {
+  private dataFilePath = path.join(process.cwd(), ".sqrp-store.json");
+
   private departments: Department[] = [
     {
       id: "dept-acad",
@@ -373,8 +377,62 @@ class DataRepository {
   private feedbackList: FeedbackRecord[] = [];
   private auditLogs: AuditLogItem[] = [];
 
+  constructor() {
+    this.loadFromFile();
+  }
+
+  private loadFromFile(): void {
+    try {
+      if (fs.existsSync(this.dataFilePath)) {
+        const raw = fs.readFileSync(this.dataFilePath, "utf-8");
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.tickets) && data.tickets.length > 0) {
+          this.tickets = data.tickets;
+        }
+        if (Array.isArray(data.profiles) && data.profiles.length > 0) {
+          for (const p of data.profiles) {
+            if (!this.profiles.some((existing) => existing.id === p.id || existing.email === p.email)) {
+              this.profiles.push(p);
+            }
+          }
+        }
+        if (Array.isArray(data.qrCodes) && data.qrCodes.length > 0) {
+          this.qrCodes = data.qrCodes;
+        }
+        if (Array.isArray(data.workerTaskUpdates) && data.workerTaskUpdates.length > 0) {
+          this.workerTaskUpdates = data.workerTaskUpdates;
+        }
+        if (Array.isArray(data.notifications) && data.notifications.length > 0) {
+          this.notifications = data.notifications;
+        }
+        if (Array.isArray(data.auditLogs) && data.auditLogs.length > 0) {
+          this.auditLogs = data.auditLogs;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load .sqrp-store.json:", e);
+    }
+  }
+
+  public persistStore(): void {
+    try {
+      const payload = {
+        tickets: this.tickets,
+        profiles: this.profiles,
+        qrCodes: this.qrCodes,
+        workerTaskUpdates: this.workerTaskUpdates,
+        notifications: this.notifications,
+        auditLogs: this.auditLogs,
+      };
+      fs.writeFileSync(this.dataFilePath, JSON.stringify(payload, null, 2), "utf-8");
+    } catch {
+      // Safe fallback if filesystem is read-only
+    }
+  }
+
   public addProfile(profile: Profile): void {
     this.profiles.push(profile);
+    this.persistStore();
   }
 
   public toggleUserStatus(userId: string): boolean {
@@ -443,8 +501,15 @@ class DataRepository {
     });
   }
 
-  public getTicketById(id: string): Ticket | undefined {
-    return this.tickets.find((t) => t.id === id || t.ticket_number === id);
+  public getTicketById(identifier: string): Ticket | undefined {
+    if (!identifier) return undefined;
+    const clean = decodeURIComponent(identifier).trim().toLowerCase();
+    return this.tickets.find(
+      (t) =>
+        t.id.toLowerCase() === clean ||
+        t.ticket_number.toLowerCase() === clean ||
+        (t.tracking_token && t.tracking_token.toLowerCase() === clean)
+    );
   }
 
   public createTicket(data: {
@@ -469,7 +534,13 @@ class DataRepository {
       ? this.getDepartmentById(category.department_id)
       : undefined;
 
-    const ticketNumber = generateTicketNumber();
+    // Concurrency-safe unique ticket number generation
+    let ticketNumber = generateTicketNumber();
+    while (this.tickets.some((t) => t.ticket_number === ticketNumber)) {
+      ticketNumber = generateTicketNumber();
+    }
+    const trackingToken = generateTrackingToken();
+
     const id = `ticket-${Date.now()}`;
     const now = new Date().toISOString();
     const slaHours = category?.sla_hours || 48;
@@ -480,6 +551,7 @@ class DataRepository {
     const newTicket: Ticket = {
       id,
       ticket_number: ticketNumber,
+      tracking_token: trackingToken,
       student_id: data.studentId,
       student_name: data.studentName,
       student_email: data.studentEmail,
@@ -549,6 +621,8 @@ class DataRepository {
       },
       created_at: now,
     });
+
+    this.persistStore();
 
     return newTicket;
   }
@@ -652,6 +726,7 @@ class DataRepository {
       created_at: new Date().toISOString(),
     });
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -713,6 +788,7 @@ class DataRepository {
       created_at: now,
     });
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -842,6 +918,7 @@ class DataRepository {
       created_at: now,
     });
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -896,6 +973,7 @@ class DataRepository {
       created_at: now,
     });
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -953,6 +1031,7 @@ class DataRepository {
       created_at: now,
     });
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -1002,6 +1081,7 @@ class DataRepository {
       created_at: now,
     });
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -1077,6 +1157,7 @@ class DataRepository {
       });
     }
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -1151,6 +1232,7 @@ class DataRepository {
       created_at: now,
     });
 
+    this.persistStore();
     return { success: true, ticket };
   }
 
@@ -1187,6 +1269,7 @@ class DataRepository {
       created_at: new Date().toISOString(),
     };
     this.qrCodes.unshift(config);
+    this.persistStore();
     return config;
   }
 
@@ -1270,6 +1353,7 @@ class DataRepository {
       });
     }
 
+    this.persistStore();
     return { success: true, message: msg };
   }
 
@@ -1300,6 +1384,7 @@ class DataRepository {
     ticket.internal_notes.push(note);
     ticket.updated_at = new Date().toISOString();
 
+    this.persistStore();
     return { success: true, note };
   }
 
@@ -1370,6 +1455,7 @@ class DataRepository {
       });
     }
 
+    this.persistStore();
     return { success: true, request: req };
   }
 
@@ -1424,6 +1510,7 @@ class DataRepository {
           });
         }
 
+        this.persistStore();
         return { success: true };
       }
     }
@@ -1474,6 +1561,7 @@ class DataRepository {
     this.feedbackList.push(fb);
     ticket.has_feedback = true;
 
+    this.persistStore();
     return { success: true };
   }
 
@@ -1600,7 +1688,7 @@ declare global {
   var __sqrp_db_repo: DataRepository | undefined;
 }
 
-export const db = global.__sqrp_db_repo || new DataRepository();
-if (process.env.NODE_ENV !== "production") {
-  global.__sqrp_db_repo = db;
+if (!global.__sqrp_db_repo) {
+  global.__sqrp_db_repo = new DataRepository();
 }
+export const db = global.__sqrp_db_repo;

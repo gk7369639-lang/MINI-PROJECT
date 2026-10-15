@@ -187,6 +187,7 @@ export interface Ticket {
   resolved_at?: string | null;
   closed_at?: string | null;
   is_confidential?: boolean;
+  tracking_token?: string | null;
   created_at: string;
   updated_at: string;
   messages?: TicketMessage[];

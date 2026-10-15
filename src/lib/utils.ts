@@ -6,15 +6,47 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+let ticketSequence = Math.floor(Math.random() * 1000) + 1001;
+
 export function generateTicketNumber(): string {
   const year = new Date().getFullYear();
-  // Safe random 6-character alphanumeric sequence
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let randomPart = "";
-  for (let i = 0; i < 6; i++) {
-    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  ticketSequence += 1;
+  const seq = (ticketSequence % 900000 + 100000).toString();
+  return `SQRP-${year}-${seq}`;
+}
+
+export function generateTrackingToken(): string {
+  const chars = "abcdefghjkmnpqrstuvwxyz23456789";
+  let token = "trk_";
+  for (let i = 0; i < 16; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `SQRP-${year}-${randomPart}`;
+  return token;
+}
+
+export function getProductionAppUrl(): string {
+  // 1. Explicit validated environment variable
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl.replace(/\/+$/, "");
+  }
+
+  // 2. Vercel deployment production variables
+  const vercelProd = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProd) {
+    return `https://${vercelProd.replace(/\/+$/, "")}`;
+  }
+
+  // 3. Client-side location if running in production browser
+  if (typeof window !== "undefined") {
+    const origin = window.location.origin;
+    if (!origin.includes("localhost") && !origin.includes("127.0.0.1")) {
+      return origin;
+    }
+  }
+
+  // 4. Stable verified production fallback
+  return "https://mini-project-ten-iota.vercel.app";
 }
 
 export function formatDate(dateString: string | null | undefined): string {

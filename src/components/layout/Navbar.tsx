@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Search,
 } from "lucide-react";
 import { NotificationItem, Profile } from "@/types";
 import { formatRelativeTime } from "@/lib/utils";
@@ -108,6 +109,14 @@ export function Navbar({ user, onToggleSidebar }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <Link
+            href="/track"
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-navy-900 transition-colors"
+          >
+            <Search className="w-4 h-4 text-primary-600" />
+            <span>Track Query</span>
+          </Link>
+
           <Link
             href="/knowledge-base"
             className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-navy-900 transition-colors"
