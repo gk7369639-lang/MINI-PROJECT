@@ -19,10 +19,13 @@ import {
   FileCheck,
   MessageSquare,
   BarChart3,
+  QrCode,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { FrontPageQRSection } from "@/components/qr/FrontPageQRSection";
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -123,6 +126,8 @@ export default function LandingPage() {
 
           <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600 dark:text-slate-300">
             <a href="#how-it-works" className="hover:text-primary-600 transition-colors">How It Works</a>
+            <a href="#qr-scan" className="hover:text-primary-600 transition-colors">Scan QR</a>
+            <Link href="/track" className="hover:text-primary-600 transition-colors">Track Query</Link>
             <a href="#lifecycle" className="hover:text-primary-600 transition-colors">Query Lifecycle</a>
             <a href="#features" className="hover:text-primary-600 transition-colors">Features</a>
             <a href="#portals" className="hover:text-primary-600 transition-colors">Portals</a>
@@ -130,6 +135,11 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link href="/track" className="hidden sm:inline-block">
+              <Button variant="ghost" size="sm" leftIcon={<Search className="w-3.5 h-3.5" />}>
+                Track
+              </Button>
+            </Link>
             <Link href="/login">
               <Button variant="outline" size="sm">Sign In</Button>
             </Link>
@@ -163,17 +173,22 @@ export default function LandingPage() {
               SQRP intelligently classifies student queries, enforces automated SLAs, and guarantees resolution transparency.
             </p>
 
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
               <Link href="/student/new-query">
                 <Button size="lg" className="shadow-lg shadow-primary-600/20" rightIcon={<ArrowRight className="w-4 h-4" />}>
                   Submit a Query
                 </Button>
               </Link>
-              <Link href="/student">
-                <Button variant="outline" size="lg">
-                  Explore Student Dashboard
+              <Link href="/track">
+                <Button variant="outline" size="lg" leftIcon={<Search className="w-4 h-4" />}>
+                  Track Existing Query
                 </Button>
               </Link>
+              <a href="#qr-scan">
+                <Button variant="ghost" size="lg" leftIcon={<QrCode className="w-4 h-4" />}>
+                  Scan QR Placard
+                </Button>
+              </a>
             </div>
 
             {/* Quick trust metrics */}
@@ -198,6 +213,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Prominent Mobile-Scannable QR Code Section */}
+      <FrontPageQRSection />
 
       {/* Query Lifecycle Visualization */}
       <section id="lifecycle" className="py-20 bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800">

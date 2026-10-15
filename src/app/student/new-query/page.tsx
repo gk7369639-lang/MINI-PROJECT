@@ -18,6 +18,9 @@ import {
   Building2,
   QrCode,
   Image as ImageIcon,
+  Copy,
+  Check,
+  ExternalLink,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -47,7 +50,13 @@ function NewQueryContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiChecking, setIsAiChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successTicket, setSuccessTicket] = useState<{ id: string; ticket_number: string } | null>(null);
+  const [successTicket, setSuccessTicket] = useState<{
+    id: string;
+    ticket_number: string;
+    tracking_token?: string | null;
+  } | null>(null);
+  const [copiedNumber, setCopiedNumber] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // AI Assistant Feedback
   const [aiSuggestions, setAiSuggestions] = useState<{
@@ -143,6 +152,7 @@ function NewQueryContent() {
         setSuccessTicket({
           id: data.ticket.id,
           ticket_number: data.ticket.ticket_number,
+          tracking_token: data.ticket.tracking_token,
         });
       } else {
         setError(data.error || "Failed to submit query. Please try again.");
@@ -154,31 +164,100 @@ function NewQueryContent() {
     }
   };
 
+  const handleCopyNumber = () => {
+    if (!successTicket) return;
+    navigator.clipboard.writeText(successTicket.ticket_number);
+    setCopiedNumber(true);
+    setTimeout(() => setCopiedNumber(false), 2000);
+  };
+
+  const handleCopyTrackingLink = () => {
+    if (!successTicket) return;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const tokenPart = successTicket.tracking_token ? `&token=${encodeURIComponent(successTicket.tracking_token)}` : "";
+    const link = `${origin}/track?number=${encodeURIComponent(successTicket.ticket_number)}${tokenPart}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   if (successTicket) {
+    const publicTrackUrl = `/track?number=${encodeURIComponent(successTicket.ticket_number)}${
+      successTicket.tracking_token ? `&token=${encodeURIComponent(successTicket.tracking_token)}` : ""
+    }`;
+
     return (
       <AppShell initialRole="STUDENT">
         <div className="max-w-xl mx-auto py-12 text-center animate-fade-in">
-          <Card className="p-8 space-y-5 border-emerald-200 bg-emerald-50/30">
+          <Card className="p-8 space-y-6 border-emerald-200 bg-emerald-50/30">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 className="w-8 h-8" />
             </div>
+
             <div>
               <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">
-                Confidential Query Logged
+                Confidential Query Successfully Logged
               </span>
-              <h2 className="text-2xl font-black text-navy-950 mt-1">
-                {successTicket.ticket_number}
-              </h2>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Your issue has been anonymously registered and queued for faculty review. Your identity remains 100% confidential.
+              <div className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 rounded-xl border border-emerald-200 shadow-sm">
+                <span className="font-mono text-xl sm:text-2xl font-black text-navy-950 dark:text-white">
+                  {successTicket.ticket_number}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyNumber}
+                  title="Copy Ticket Number"
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition"
+                >
+                  {copiedNumber ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedNumber ? "Copied!" : "Copy #"}</span>
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-500 mt-3 leading-relaxed max-w-md mx-auto">
+                Your issue has been securely registered in the central system and queued for faculty review. Your personal identity remains 100% confidential.
               </p>
             </div>
-            <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+
+            {/* Quick Sharing & Tracking Actions */}
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 text-left space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-navy-950 dark:text-white">Live Query Tracking</h4>
+                  <p className="text-[11px] text-slate-500">Track progress anytime using your ticket number or secure link</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyTrackingLink}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 border border-primary-200 transition"
+                >
+                  {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                  <span>{copiedLink ? "Link Copied!" : "Copy Tracking Link"}</span>
+                </button>
+              </div>
+
+              {successTicket.tracking_token && (
+                <div className="text-[11px] text-slate-400 font-mono break-all bg-slate-50 dark:bg-slate-800 p-2 rounded border border-slate-200/60">
+                  <span className="text-slate-500 font-sans font-medium">Tracking Token: </span>
+                  {successTicket.tracking_token}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
               <Link href={`/student/tickets/${successTicket.id}`}>
-                <Button size="md">Track Confidential Timeline</Button>
+                <Button size="md" variant="primary">
+                  View Full Query Details
+                </Button>
+              </Link>
+              <Link href={publicTrackUrl}>
+                <Button variant="outline" size="md">
+                  Open Public Tracker
+                </Button>
               </Link>
               <Link href="/student">
-                <Button variant="outline" size="md">Return to Student Dashboard</Button>
+                <Button variant="ghost" size="md">
+                  Student Dashboard
+                </Button>
               </Link>
             </div>
           </Card>
