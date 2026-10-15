@@ -56,8 +56,20 @@ export default function StudentDashboard() {
   }, []);
 
   const totalSubmitted = tickets.length;
-  const inProgressCount = tickets.filter((t) => ["ASSIGNED", "IN_PROGRESS"].includes(t.status)).length;
-  const waitingCount = tickets.filter((t) => ["WAITING_FOR_STUDENT", "WAITING_FOR_APPROVAL"].includes(t.status)).length;
+  const inProgressCount = tickets.filter((t) =>
+    [
+      "UNDER_FACULTY_REVIEW",
+      "READY_FOR_ASSIGNMENT",
+      "ASSIGNED_TO_WORKER",
+      "WORKER_ACCEPTED",
+      "IN_PROGRESS",
+      "WAITING_FOR_PARTS_OR_RESOURCES",
+      "ASSIGNED",
+    ].includes(t.status)
+  ).length;
+  const waitingCount = tickets.filter((t) =>
+    ["WAITING_FOR_STUDENT", "WAITING_FOR_CLARIFICATION", "WAITING_FOR_APPROVAL"].includes(t.status)
+  ).length;
   const resolvedCount = tickets.filter((t) => ["RESOLVED", "CLOSED"].includes(t.status)).length;
 
   const filteredTickets = tickets.filter((t) => {
@@ -67,7 +79,8 @@ export default function StudentDashboard() {
       const matchSubject = t.subject.toLowerCase().includes(q);
       const matchId = t.ticket_number.toLowerCase().includes(q);
       const matchDept = (t.department_name || "").toLowerCase().includes(q);
-      if (!matchSubject && !matchId && !matchDept) return false;
+      const matchLoc = (t.location_building || "").toLowerCase().includes(q) || (t.location_room || "").toLowerCase().includes(q);
+      if (!matchSubject && !matchId && !matchDept && !matchLoc) return false;
     }
     return true;
   });
@@ -157,7 +170,7 @@ export default function StudentDashboard() {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            {["ALL", "SUBMITTED", "IN_PROGRESS", "WAITING_FOR_APPROVAL", "RESOLVED"].map((status) => (
+            {["ALL", "SUBMITTED", "UNDER_FACULTY_REVIEW", "IN_PROGRESS", "RESOLVED"].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -226,13 +239,21 @@ export default function StudentDashboard() {
                         </h3>
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                          {(ticket.location_building || ticket.location_room) && (
+                            <>
+                              <span className="font-semibold text-primary-700 dark:text-primary-400">
+                                📍 {ticket.location_building || "Campus"}{ticket.location_room ? ` • ${ticket.location_room}` : ""}
+                              </span>
+                              <span>•</span>
+                            </>
+                          )}
                           <span>Dept: <strong className="text-slate-700 dark:text-slate-300">{ticket.department_name || "General"}</strong></span>
                           <span>•</span>
                           <span>Updated {formatRelativeTime(ticket.updated_at)}</span>
-                          {ticket.assigned_staff_name && (
+                          {ticket.assigned_worker_name && (
                             <>
                               <span>•</span>
-                              <span>Staff: <strong className="text-slate-700 dark:text-slate-300">{ticket.assigned_staff_name}</strong></span>
+                              <span>Technician: <strong className="text-slate-700 dark:text-slate-300">{ticket.assigned_worker_name}</strong></span>
                             </>
                           )}
                         </div>

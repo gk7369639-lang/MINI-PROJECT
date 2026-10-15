@@ -28,27 +28,27 @@ export async function GET(req: NextRequest) {
     // Enforce role-based access control
     if (user.role === "STUDENT") {
       tickets = tickets.filter((t) => t.student_id === user.id);
-    } else if (user.role === "STAFF") {
-      // Staff sees tickets in their department or assigned to them
+    } else if (user.role === "WORKER") {
+      // Worker only sees tickets assigned to them
+      tickets = tickets.filter((t) => t.assigned_worker_id === user.id || t.assigned_to === user.id);
+    } else if (user.role === "FACULTY" || user.role === "STAFF") {
+      // Faculty sees unassigned queries, review queue, or department-assigned
       if (user.department_id) {
-        tickets = tickets.filter((t) => t.department_id === user.department_id || t.assigned_to === user.id);
-      }
-    } else if (user.role === "DEPARTMENT_HEAD") {
-      // Head sees their department's tickets
-      if (user.department_id) {
-        tickets = tickets.filter((t) => t.department_id === user.department_id);
+        tickets = tickets.filter(
+          (t) =>
+            !t.department_id ||
+            t.department_id === user.department_id ||
+            t.status === "SUBMITTED" ||
+            t.status === "UNDER_FACULTY_REVIEW" ||
+            t.status === "READY_FOR_ASSIGNMENT"
+        );
       }
     }
 
-    // Mask internal notes for students
-    if (user.role === "STUDENT") {
-      tickets = tickets.map((t) => ({
-        ...t,
-        internal_notes: [],
-      }));
-    }
+    // Apply strict privacy-by-design sanitization for all returned tickets
+    const sanitizedTickets = tickets.map((t) => db.sanitizeTicketForViewer(t, user.id, user.role));
 
-    return NextResponse.json({ success: true, tickets });
+    return NextResponse.json({ success: true, tickets: sanitizedTickets });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     // Trigger Smart Routing Agent
     const routing = routingAgent.routeTicket(departmentId, priority, db.getTickets());
 
-    // Create ticket in database
+    // Create ticket in database with location and confidential tracking attributes
     const ticket = db.createTicket({
       studentId: student.id,
       studentName: student.full_name,
@@ -96,11 +96,17 @@ export async function POST(req: NextRequest) {
       departmentId,
       priority,
       assignedTo: routing.recommended_staff_id || undefined,
+      locationBuilding: validated.location_building,
+      locationRoom: validated.location_room,
+      imageUrl: validated.image_url,
     });
+
+    // Sanitize ticket for returning to creator
+    const sanitizedTicket = db.sanitizeTicketForViewer(ticket, student.id, student.role);
 
     return NextResponse.json({
       success: true,
-      ticket,
+      ticket: sanitizedTicket,
       classification,
       routing,
     });

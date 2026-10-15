@@ -2,20 +2,35 @@
 // STUDENT QUERY RESOLUTION PLATFORM (SQRP) - TYPE DEFINITIONS
 // ==============================================================================
 
-export type UserRole = 'STUDENT' | 'STAFF' | 'DEPARTMENT_HEAD' | 'ADMIN';
+export type UserRole =
+  | 'STUDENT'
+  | 'FACULTY'
+  | 'WORKER'
+  | 'QUERY_SYSTEM_ADMIN'
+  | 'STAFF'
+  | 'DEPARTMENT_HEAD'
+  | 'ADMIN';
 
 export type TicketStatus =
   | 'SUBMITTED'
-  | 'TRIAGED'
-  | 'ASSIGNED'
+  | 'UNDER_FACULTY_REVIEW'
+  | 'WAITING_FOR_CLARIFICATION'
+  | 'READY_FOR_ASSIGNMENT'
+  | 'ASSIGNED_TO_WORKER'
+  | 'WORKER_ACCEPTED'
   | 'IN_PROGRESS'
-  | 'WAITING_FOR_STUDENT'
-  | 'WAITING_FOR_APPROVAL'
+  | 'WAITING_FOR_PARTS_OR_RESOURCES'
+  | 'NOT_RESOLVED'
+  | 'REQUIRES_REASSIGNMENT'
   | 'RESOLVED'
   | 'CLOSED'
-  | 'REJECTED'
   | 'REOPENED'
-  | 'ESCALATED';
+  | 'ESCALATED'
+  | 'TRIAGED'
+  | 'ASSIGNED'
+  | 'WAITING_FOR_STUDENT'
+  | 'WAITING_FOR_APPROVAL'
+  | 'REJECTED';
 
 export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
@@ -61,6 +76,8 @@ export interface SupportCategory {
   requires_approval: boolean;
   is_active: boolean;
 }
+
+export type Category = SupportCategory;
 
 export interface Attachment {
   id: string;
@@ -143,13 +160,33 @@ export interface Ticket {
   description: string;
   priority: TicketPriority;
   status: TicketStatus;
+  location_building?: string | null;
+  location_room?: string | null;
+  image_url?: string | null;
   sla_due_at?: string | null;
   assigned_to?: string | null;
   assigned_staff_name?: string | null;
+  assigned_worker_id?: string | null;
+  assigned_worker_name?: string | null;
+  assigned_department_id?: string | null;
+  assigned_department_name?: string | null;
+  faculty_reviewer_id?: string | null;
+  faculty_reviewer_name?: string | null;
+  faculty_notes?: string | null;
+  worker_notes?: string | null;
+  not_resolved_reason?: string | null;
   resolution_summary?: string | null;
   reopened_reason?: string | null;
+  submitted_at?: string;
+  faculty_review_started_at?: string | null;
+  faculty_review_completed_at?: string | null;
+  assigned_at?: string | null;
+  worker_accepted_at?: string | null;
+  work_started_at?: string | null;
+  last_progress_at?: string | null;
   resolved_at?: string | null;
   closed_at?: string | null;
+  is_confidential?: boolean;
   created_at: string;
   updated_at: string;
   messages?: TicketMessage[];
@@ -158,6 +195,27 @@ export interface Ticket {
   attachments?: Attachment[];
   approval_requests?: ApprovalRequest[];
   has_feedback?: boolean;
+}
+
+export interface WorkerTaskUpdate {
+  id: string;
+  ticket_id: string;
+  worker_id: string;
+  worker_name: string;
+  status: TicketStatus;
+  note?: string | null;
+  parts_required?: string | null;
+  created_at: string;
+}
+
+export interface QRCodeConfig {
+  id: string;
+  title: string;
+  target_url: string;
+  building?: string | null;
+  room?: string | null;
+  scan_count?: number;
+  created_at: string;
 }
 
 export interface NotificationItem {

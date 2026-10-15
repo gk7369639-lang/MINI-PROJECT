@@ -15,6 +15,8 @@ import {
   TicketPriority,
   UserRole,
   ApprovalStatus,
+  WorkerTaskUpdate,
+  QRCodeConfig,
 } from "@/types";
 import { generateTicketNumber } from "@/lib/utils";
 import { validateStateTransition } from "@/lib/state-machine";
@@ -196,10 +198,22 @@ class DataRepository {
       updated_at: "2026-01-10T10:00:00Z",
     },
     {
+      id: "user-faculty-1",
+      email: "faculty@nite.edu.in",
+      full_name: "Dr. Sunita Rao",
+      role: "FACULTY",
+      department_id: "dept-acad",
+      department_name: "Academic & Facility Review Board",
+      phone: "+91 98765 43220",
+      is_active: true,
+      created_at: "2025-07-01T10:00:00Z",
+      updated_at: "2025-07-01T10:00:00Z",
+    },
+    {
       id: "user-staff-1",
       email: "staff@nite.edu.in",
       full_name: "Dr. Ramesh Kumar",
-      role: "STAFF",
+      role: "FACULTY",
       department_id: "dept-acad",
       department_name: "Academic Affairs & Registry",
       phone: "+91 98765 43211",
@@ -208,22 +222,46 @@ class DataRepository {
       updated_at: "2025-08-01T10:00:00Z",
     },
     {
-      id: "user-staff-2",
-      email: "staff.exam@nite.edu.in",
-      full_name: "S. Priya",
-      role: "STAFF",
-      department_id: "dept-exam",
-      department_name: "Examination Cell & Evaluation",
-      phone: "+91 98765 43212",
+      id: "user-worker-1",
+      email: "worker.electric@nite.edu.in",
+      full_name: "Rajesh Sharma",
+      role: "WORKER",
+      department_id: "dept-its",
+      department_name: "Campus IT & Infrastructure Support",
+      phone: "+91 98765 43231",
       is_active: true,
-      created_at: "2025-08-01T10:00:00Z",
-      updated_at: "2025-08-01T10:00:00Z",
+      created_at: "2025-09-01T10:00:00Z",
+      updated_at: "2025-09-01T10:00:00Z",
+    },
+    {
+      id: "user-worker-2",
+      email: "worker.plumbing@nite.edu.in",
+      full_name: "Suresh Kumar",
+      role: "WORKER",
+      department_id: "dept-hostel",
+      department_name: "Hostel & Residential Services",
+      phone: "+91 98765 43232",
+      is_active: true,
+      created_at: "2025-09-01T10:00:00Z",
+      updated_at: "2025-09-01T10:00:00Z",
+    },
+    {
+      id: "user-worker-3",
+      email: "worker.network@nite.edu.in",
+      full_name: "David Antony",
+      role: "WORKER",
+      department_id: "dept-its",
+      department_name: "Campus IT & Infrastructure Support",
+      phone: "+91 98765 43233",
+      is_active: true,
+      created_at: "2025-09-01T10:00:00Z",
+      updated_at: "2025-09-01T10:00:00Z",
     },
     {
       id: "user-head-1",
       email: "head@nite.edu.in",
       full_name: "Prof. Meenakshi Sundaram",
-      role: "DEPARTMENT_HEAD",
+      role: "QUERY_SYSTEM_ADMIN",
       department_id: "dept-acad",
       department_name: "Academic Affairs & Registry",
       phone: "+91 98765 43213",
@@ -235,7 +273,7 @@ class DataRepository {
       id: "user-admin-1",
       email: "admin@nite.edu.in",
       full_name: "System Administrator",
-      role: "ADMIN",
+      role: "QUERY_SYSTEM_ADMIN",
       is_active: true,
       created_at: "2025-01-01T10:00:00Z",
       updated_at: "2025-01-01T10:00:00Z",
@@ -243,6 +281,45 @@ class DataRepository {
   ];
 
   private tickets: Ticket[] = [];
+  private workerTaskUpdates: WorkerTaskUpdate[] = [];
+  private qrCodes: QRCodeConfig[] = [
+    {
+      id: "qr-campus-main",
+      title: "Main Academic Complex — All Classrooms & Labs",
+      target_url: "/student/new-query?building=Main%20Academic%20Complex",
+      building: "Main Academic Complex",
+      room: "General",
+      scan_count: 38,
+      created_at: "2026-01-15T09:00:00Z",
+    },
+    {
+      id: "qr-cse-lab",
+      title: "Science & Technology Block — Computing Lab 302",
+      target_url: "/student/new-query?building=Science%20%26%20Technology%20Block&room=Lab%20302",
+      building: "Science & Technology Block",
+      room: "Lab 302",
+      scan_count: 74,
+      created_at: "2026-01-16T11:00:00Z",
+    },
+    {
+      id: "qr-hostel-dorms",
+      title: "Residential Hostel Block A — Dormitory Maintenance",
+      target_url: "/student/new-query?building=Hostel%20Block%20A",
+      building: "Hostel Block A",
+      room: "Resident Rooms",
+      scan_count: 51,
+      created_at: "2026-01-18T14:30:00Z",
+    },
+    {
+      id: "qr-central-library",
+      title: "Central Library & Digital Resource Center",
+      target_url: "/student/new-query?building=Central%20Library&room=Reading%20Hall%202",
+      building: "Central Library",
+      room: "Reading Hall 2",
+      scan_count: 29,
+      created_at: "2026-01-20T16:00:00Z",
+    },
+  ];
 
   private knowledgeBase: KnowledgeBaseArticle[] = [
     {
@@ -381,6 +458,9 @@ class DataRepository {
     departmentId?: string;
     priority?: TicketPriority;
     assignedTo?: string;
+    locationBuilding?: string;
+    locationRoom?: string;
+    imageUrl?: string;
   }): Ticket {
     const category = data.categoryId ? this.getCategoryById(data.categoryId) : undefined;
     const department = data.departmentId
@@ -413,10 +493,25 @@ class DataRepository {
       subject: data.subject,
       description: data.description,
       priority: data.priority || "MEDIUM",
-      status: assignedStaff ? "ASSIGNED" : "SUBMITTED",
+      status: assignedStaff ? "ASSIGNED_TO_WORKER" : "SUBMITTED",
+      location_building: data.locationBuilding || null,
+      location_room: data.locationRoom || null,
+      image_url: data.imageUrl || null,
       sla_due_at: slaDueAt,
       assigned_to: assignedStaff?.id || null,
       assigned_staff_name: assignedStaff?.full_name || null,
+      assigned_worker_id: assignedStaff?.role === "WORKER" ? assignedStaff.id : null,
+      assigned_worker_name: assignedStaff?.role === "WORKER" ? assignedStaff.full_name : null,
+      submitted_at: now,
+      faculty_review_started_at: null,
+      faculty_review_completed_at: null,
+      assigned_at: assignedStaff ? now : null,
+      worker_accepted_at: null,
+      work_started_at: null,
+      last_progress_at: null,
+      resolved_at: null,
+      closed_at: null,
+      is_confidential: true,
       created_at: now,
       updated_at: now,
       messages: [],
@@ -426,11 +521,11 @@ class DataRepository {
           id: `hist-${Date.now()}`,
           ticket_id: id,
           changed_by: data.studentId,
-          changer_name: data.studentName,
+          changer_name: "[Confidential Student]",
           changer_role: "STUDENT",
           old_status: null,
-          new_status: assignedStaff ? "ASSIGNED" : "SUBMITTED",
-          reason: assignedStaff ? "Assigned upon creation" : "Initial submission",
+          new_status: assignedStaff ? "ASSIGNED_TO_WORKER" : "SUBMITTED",
+          reason: assignedStaff ? "Assigned upon creation" : "Initial confidential query submission",
           created_at: now,
         },
       ],
@@ -442,16 +537,46 @@ class DataRepository {
     this.auditLogs.unshift({
       id: `log-${Date.now()}`,
       actor_id: data.studentId,
-      actor_name: data.studentName,
+      actor_name: "[Confidential Student]",
       actor_role: "STUDENT",
       action: "TICKET_CREATED",
       entity_type: "TICKET",
       entity_id: id,
-      details: { ticket_number: ticketNumber, subject: data.subject },
+      details: {
+        ticket_number: ticketNumber,
+        subject: data.subject,
+        location: `${data.locationBuilding || "Campus"} ${data.locationRoom || ""}`.trim(),
+      },
       created_at: now,
     });
 
     return newTicket;
+  }
+
+  public sanitizeTicketForViewer(
+    ticket: Ticket,
+    viewerId?: string,
+    viewerRole?: UserRole
+  ): Ticket {
+    // If student is viewing their own ticket:
+    if (viewerRole === "STUDENT" && viewerId && ticket.student_id === viewerId) {
+      return {
+        ...ticket,
+        is_confidential: false,
+        internal_notes: [], // Students never see internal notes
+      };
+    }
+
+    // Strict Privacy by Design: Faculty, Worker, Admin, or third party cannot see student identity
+    return {
+      ...ticket,
+      student_id: "[Redacted-Confidential]",
+      student_name: "[Confidential Student]",
+      student_email: "[Protected-Identity]",
+      student_reg_no: undefined,
+      is_confidential: true,
+      internal_notes: viewerRole === "STUDENT" ? [] : ticket.internal_notes,
+    };
   }
 
   public updateTicketStatus(
@@ -517,8 +642,8 @@ class DataRepository {
 
     this.auditLogs.unshift({
       id: `log-${Date.now()}`,
-      actor_id: changer.id,
-      actor_name: changer.full_name,
+      actor_id: changer.role === "STUDENT" ? "[Redacted-Confidential]" : changer.id,
+      actor_name: changer.role === "STUDENT" ? "[Confidential Student]" : changer.full_name,
       actor_role: changer.role,
       action: `STATUS_CHANGED_TO_${newStatus}`,
       entity_type: "TICKET",
@@ -530,6 +655,548 @@ class DataRepository {
     return { success: true, ticket };
   }
 
+  public getWorkers(departmentId?: string): Profile[] {
+    return this.profiles.filter((p) => {
+      if (p.role !== "WORKER") return false;
+      if (departmentId && p.department_id && p.department_id !== departmentId) return false;
+      return p.is_active;
+    });
+  }
+
+  public startFacultyReview(
+    ticketId: string,
+    facultyId: string
+  ): { success: boolean; error?: string; ticket?: Ticket } {
+    const ticket = this.getTicketById(ticketId);
+    if (!ticket) return { success: false, error: "Query not found." };
+    const faculty = this.getProfileById(facultyId);
+    if (
+      !faculty ||
+      (faculty.role !== "FACULTY" &&
+        faculty.role !== "STAFF" &&
+        faculty.role !== "QUERY_SYSTEM_ADMIN" &&
+        faculty.role !== "ADMIN")
+    ) {
+      return { success: false, error: "Unauthorized. Review rights required." };
+    }
+
+    const now = new Date().toISOString();
+    ticket.status = "UNDER_FACULTY_REVIEW";
+    ticket.faculty_reviewer_id = faculty.id;
+    ticket.faculty_reviewer_name = faculty.full_name;
+    if (!ticket.faculty_review_started_at) {
+      ticket.faculty_review_started_at = now;
+    }
+    ticket.updated_at = now;
+
+    if (!ticket.history) ticket.history = [];
+    ticket.history.push({
+      id: `hist-${Date.now()}`,
+      ticket_id: ticket.id,
+      changed_by: faculty.id,
+      changer_name: faculty.full_name,
+      changer_role: faculty.role,
+      old_status: ticket.status,
+      new_status: "UNDER_FACULTY_REVIEW",
+      reason: "Faculty reviewer opened case for operational analysis and assignment",
+      created_at: now,
+    });
+
+    this.notifications.unshift({
+      id: `notif-${Date.now()}`,
+      user_id: ticket.student_id,
+      title: `Query #${ticket.ticket_number} Under Review`,
+      message: "Your query is currently under evaluation by the departmental faculty review desk.",
+      link: `/student/tickets/${ticket.id}`,
+      is_read: false,
+      notification_type: "FACULTY_REVIEW_STARTED",
+      created_at: now,
+    });
+
+    return { success: true, ticket };
+  }
+
+  public assignTicketToWorker(data: {
+    ticketId: string;
+    facultyId: string;
+    workerId: string;
+    departmentId?: string;
+    categoryId?: string;
+    priority?: TicketPriority;
+    deadlineHours?: number;
+    facultyNote?: string;
+    studentMessage?: string;
+  }): { success: boolean; error?: string; ticket?: Ticket } {
+    const ticket = this.getTicketById(data.ticketId);
+    if (!ticket) return { success: false, error: "Query not found." };
+    const faculty = this.getProfileById(data.facultyId);
+    if (
+      !faculty ||
+      (faculty.role !== "FACULTY" &&
+        faculty.role !== "STAFF" &&
+        faculty.role !== "QUERY_SYSTEM_ADMIN" &&
+        faculty.role !== "ADMIN")
+    ) {
+      return { success: false, error: "Unauthorized. Faculty review rights required." };
+    }
+
+    const worker = this.getProfileById(data.workerId);
+    if (!worker || worker.role !== "WORKER") {
+      return { success: false, error: "Selected assignee must be an active registered Worker." };
+    }
+
+    const now = new Date().toISOString();
+    ticket.status = "ASSIGNED_TO_WORKER";
+    ticket.assigned_worker_id = worker.id;
+    ticket.assigned_worker_name = worker.full_name;
+    ticket.assigned_to = worker.id;
+    ticket.assigned_staff_name = worker.full_name;
+    ticket.assigned_at = now;
+    ticket.faculty_review_completed_at = now;
+
+    if (data.departmentId) {
+      const dept = this.getDepartmentById(data.departmentId);
+      if (dept) {
+        ticket.department_id = dept.id;
+        ticket.department_name = dept.name;
+        ticket.department_code = dept.code;
+      }
+    }
+    if (data.categoryId) {
+      const cat = this.getCategoryById(data.categoryId);
+      if (cat) {
+        ticket.category_id = cat.id;
+        ticket.category_name = cat.name;
+        ticket.category_code = cat.code;
+      }
+    }
+    if (data.priority) {
+      ticket.priority = data.priority;
+    }
+    const hours = data.deadlineHours || 24;
+    ticket.sla_due_at = new Date(Date.now() + hours * 3600000).toISOString();
+    ticket.updated_at = now;
+
+    if (data.facultyNote) {
+      ticket.faculty_notes = data.facultyNote;
+      if (!ticket.internal_notes) ticket.internal_notes = [];
+      ticket.internal_notes.push({
+        id: `note-${Date.now()}`,
+        ticket_id: ticket.id,
+        author_id: faculty.id,
+        author_name: faculty.full_name,
+        author_role: faculty.role,
+        content: `Faculty Review Note: ${data.facultyNote}`,
+        created_at: now,
+      });
+    }
+
+    if (data.studentMessage) {
+      if (!ticket.messages) ticket.messages = [];
+      ticket.messages.push({
+        id: `msg-${Date.now()}`,
+        ticket_id: ticket.id,
+        sender_id: faculty.id,
+        sender_name: "Faculty Review Desk",
+        sender_role: "FACULTY",
+        message_type: "SYSTEM_UPDATE",
+        content: data.studentMessage,
+        created_at: now,
+      });
+    }
+
+    if (!ticket.history) ticket.history = [];
+    ticket.history.push({
+      id: `hist-${Date.now()}`,
+      ticket_id: ticket.id,
+      changed_by: faculty.id,
+      changer_name: faculty.full_name,
+      changer_role: faculty.role,
+      old_status: ticket.status,
+      new_status: "ASSIGNED_TO_WORKER",
+      reason: `Assigned to worker ${worker.full_name} with SLA deadline of ${hours} hours`,
+      created_at: now,
+    });
+
+    // Notify worker
+    this.notifications.unshift({
+      id: `notif-${Date.now()}`,
+      user_id: worker.id,
+      title: `New Maintenance Task #${ticket.ticket_number}`,
+      message: `${ticket.subject} — Location: ${ticket.location_building || "Campus"} ${ticket.location_room || ""}`,
+      link: `/worker`,
+      is_read: false,
+      notification_type: "TASK_ASSIGNED",
+      created_at: now,
+    });
+
+    // Notify student (clean message without exposing worker personal details)
+    this.notifications.unshift({
+      id: `notif-${Date.now() + 1}`,
+      user_id: ticket.student_id,
+      title: `Query #${ticket.ticket_number} Assigned to Maintenance`,
+      message: `Your query has been assigned to the maintenance department for physical resolution.`,
+      link: `/student/tickets/${ticket.id}`,
+      is_read: false,
+      notification_type: "STATUS_CHANGED",
+      created_at: now,
+    });
+
+    return { success: true, ticket };
+  }
+
+  public workerAcceptTask(
+    ticketId: string,
+    workerId: string
+  ): { success: boolean; error?: string; ticket?: Ticket } {
+    const ticket = this.getTicketById(ticketId);
+    if (!ticket) return { success: false, error: "Task not found." };
+    if (ticket.assigned_worker_id !== workerId && ticket.assigned_to !== workerId) {
+      return { success: false, error: "You can only accept tasks assigned to you." };
+    }
+
+    const worker = this.getProfileById(workerId);
+    const now = new Date().toISOString();
+    ticket.status = "WORKER_ACCEPTED";
+    ticket.worker_accepted_at = now;
+    ticket.last_progress_at = now;
+    ticket.updated_at = now;
+
+    this.workerTaskUpdates.unshift({
+      id: `update-${Date.now()}`,
+      ticket_id: ticket.id,
+      worker_id: workerId,
+      worker_name: worker?.full_name || "Assigned Worker",
+      status: "WORKER_ACCEPTED",
+      note: "Worker acknowledged and accepted the task assignment.",
+      created_at: now,
+    });
+
+    if (!ticket.history) ticket.history = [];
+    ticket.history.push({
+      id: `hist-${Date.now()}`,
+      ticket_id: ticket.id,
+      changed_by: workerId,
+      changer_name: worker?.full_name || "Worker",
+      changer_role: "WORKER",
+      old_status: "ASSIGNED_TO_WORKER",
+      new_status: "WORKER_ACCEPTED",
+      reason: "Worker accepted task",
+      created_at: now,
+    });
+
+    this.notifications.unshift({
+      id: `notif-${Date.now()}`,
+      user_id: ticket.student_id,
+      title: `Task Accepted for #${ticket.ticket_number}`,
+      message: "Maintenance technician has accepted your issue and queued it for immediate work.",
+      link: `/student/tickets/${ticket.id}`,
+      is_read: false,
+      notification_type: "STATUS_CHANGED",
+      created_at: now,
+    });
+
+    return { success: true, ticket };
+  }
+
+  public workerStartWork(
+    ticketId: string,
+    workerId: string,
+    note?: string
+  ): { success: boolean; error?: string; ticket?: Ticket } {
+    const ticket = this.getTicketById(ticketId);
+    if (!ticket) return { success: false, error: "Task not found." };
+    if (ticket.assigned_worker_id !== workerId && ticket.assigned_to !== workerId) {
+      return { success: false, error: "Unauthorized. Task is assigned to another worker." };
+    }
+
+    const worker = this.getProfileById(workerId);
+    const now = new Date().toISOString();
+    ticket.status = "IN_PROGRESS";
+    if (!ticket.work_started_at) {
+      ticket.work_started_at = now;
+    }
+    ticket.last_progress_at = now;
+    ticket.updated_at = now;
+
+    this.workerTaskUpdates.unshift({
+      id: `update-${Date.now()}`,
+      ticket_id: ticket.id,
+      worker_id: workerId,
+      worker_name: worker?.full_name || "Worker",
+      status: "IN_PROGRESS",
+      note: note || "Physical repair work commenced at facility location.",
+      created_at: now,
+    });
+
+    if (!ticket.history) ticket.history = [];
+    ticket.history.push({
+      id: `hist-${Date.now()}`,
+      ticket_id: ticket.id,
+      changed_by: workerId,
+      changer_name: worker?.full_name || "Worker",
+      changer_role: "WORKER",
+      old_status: ticket.status,
+      new_status: "IN_PROGRESS",
+      reason: note || "Work started on site",
+      created_at: now,
+    });
+
+    this.notifications.unshift({
+      id: `notif-${Date.now()}`,
+      user_id: ticket.student_id,
+      title: `Work In Progress for #${ticket.ticket_number}`,
+      message: "Technician has arrived at the location and commenced repair work.",
+      link: `/student/tickets/${ticket.id}`,
+      is_read: false,
+      notification_type: "STATUS_CHANGED",
+      created_at: now,
+    });
+
+    return { success: true, ticket };
+  }
+
+  public workerUpdateProgress(
+    ticketId: string,
+    workerId: string,
+    note: string,
+    partsRequired?: string
+  ): { success: boolean; error?: string; ticket?: Ticket } {
+    const ticket = this.getTicketById(ticketId);
+    if (!ticket) return { success: false, error: "Task not found." };
+    if (ticket.assigned_worker_id !== workerId && ticket.assigned_to !== workerId) {
+      return { success: false, error: "Unauthorized. Task is assigned to another worker." };
+    }
+
+    const worker = this.getProfileById(workerId);
+    const now = new Date().toISOString();
+    ticket.last_progress_at = now;
+    ticket.worker_notes = note;
+
+    if (partsRequired && partsRequired.trim().length > 0) {
+      ticket.status = "WAITING_FOR_PARTS_OR_RESOURCES";
+    }
+    ticket.updated_at = now;
+
+    this.workerTaskUpdates.unshift({
+      id: `update-${Date.now()}`,
+      ticket_id: ticket.id,
+      worker_id: workerId,
+      worker_name: worker?.full_name || "Worker",
+      status: ticket.status,
+      note,
+      parts_required: partsRequired,
+      created_at: now,
+    });
+
+    if (!ticket.history) ticket.history = [];
+    ticket.history.push({
+      id: `hist-${Date.now()}`,
+      ticket_id: ticket.id,
+      changed_by: workerId,
+      changer_name: worker?.full_name || "Worker",
+      changer_role: "WORKER",
+      old_status: ticket.status,
+      new_status: ticket.status,
+      reason: partsRequired ? `Parts/Resources required: ${partsRequired}` : note,
+      created_at: now,
+    });
+
+    return { success: true, ticket };
+  }
+
+  public workerResolveTask(
+    ticketId: string,
+    workerId: string,
+    resolutionSummary: string
+  ): { success: boolean; error?: string; ticket?: Ticket } {
+    if (!resolutionSummary || resolutionSummary.trim().length < 5) {
+      return { success: false, error: "A detailed resolution summary is required to complete the task." };
+    }
+
+    const ticket = this.getTicketById(ticketId);
+    if (!ticket) return { success: false, error: "Task not found." };
+    if (ticket.assigned_worker_id !== workerId && ticket.assigned_to !== workerId) {
+      return { success: false, error: "Unauthorized. Task is assigned to another worker." };
+    }
+
+    const worker = this.getProfileById(workerId);
+    const now = new Date().toISOString();
+    ticket.status = "RESOLVED";
+    ticket.resolution_summary = resolutionSummary;
+    ticket.resolved_at = now;
+    ticket.last_progress_at = now;
+    ticket.updated_at = now;
+
+    this.workerTaskUpdates.unshift({
+      id: `update-${Date.now()}`,
+      ticket_id: ticket.id,
+      worker_id: workerId,
+      worker_name: worker?.full_name || "Worker",
+      status: "RESOLVED",
+      note: resolutionSummary,
+      created_at: now,
+    });
+
+    if (!ticket.history) ticket.history = [];
+    ticket.history.push({
+      id: `hist-${Date.now()}`,
+      ticket_id: ticket.id,
+      changed_by: workerId,
+      changer_name: worker?.full_name || "Worker",
+      changer_role: "WORKER",
+      old_status: "IN_PROGRESS",
+      new_status: "RESOLVED",
+      reason: resolutionSummary,
+      created_at: now,
+    });
+
+    // Notify student
+    this.notifications.unshift({
+      id: `notif-${Date.now()}`,
+      user_id: ticket.student_id,
+      title: `Issue #${ticket.ticket_number} Resolved`,
+      message: `Resolution: ${resolutionSummary}. Please verify and confirm resolution.`,
+      link: `/student/tickets/${ticket.id}`,
+      is_read: false,
+      notification_type: "TICKET_RESOLVED",
+      created_at: now,
+    });
+
+    // Notify faculty reviewer
+    if (ticket.faculty_reviewer_id) {
+      this.notifications.unshift({
+        id: `notif-${Date.now() + 1}`,
+        user_id: ticket.faculty_reviewer_id,
+        title: `Task #${ticket.ticket_number} Resolved by Worker`,
+        message: `${worker?.full_name} completed task. Summary: ${resolutionSummary}`,
+        link: `/faculty`,
+        is_read: false,
+        notification_type: "TASK_RESOLVED",
+        created_at: now,
+      });
+    }
+
+    return { success: true, ticket };
+  }
+
+  public workerReportNotResolved(
+    ticketId: string,
+    workerId: string,
+    reason: string
+  ): { success: boolean; error?: string; ticket?: Ticket } {
+    if (!reason || reason.trim().length < 5) {
+      return { success: false, error: "A clear reason is required explaining why the issue could not be resolved." };
+    }
+
+    const ticket = this.getTicketById(ticketId);
+    if (!ticket) return { success: false, error: "Task not found." };
+    if (ticket.assigned_worker_id !== workerId && ticket.assigned_to !== workerId) {
+      return { success: false, error: "Unauthorized. Task is assigned to another worker." };
+    }
+
+    const worker = this.getProfileById(workerId);
+    const now = new Date().toISOString();
+    ticket.status = "NOT_RESOLVED";
+    ticket.not_resolved_reason = reason;
+    ticket.last_progress_at = now;
+    ticket.updated_at = now;
+
+    this.workerTaskUpdates.unshift({
+      id: `update-${Date.now()}`,
+      ticket_id: ticket.id,
+      worker_id: workerId,
+      worker_name: worker?.full_name || "Worker",
+      status: "NOT_RESOLVED",
+      note: `Unresolved Report: ${reason}`,
+      created_at: now,
+    });
+
+    if (!ticket.history) ticket.history = [];
+    ticket.history.push({
+      id: `hist-${Date.now()}`,
+      ticket_id: ticket.id,
+      changed_by: workerId,
+      changer_name: worker?.full_name || "Worker",
+      changer_role: "WORKER",
+      old_status: "IN_PROGRESS",
+      new_status: "NOT_RESOLVED",
+      reason: `Could not resolve: ${reason}`,
+      created_at: now,
+    });
+
+    // Notify faculty reviewer
+    if (ticket.faculty_reviewer_id) {
+      this.notifications.unshift({
+        id: `notif-${Date.now()}`,
+        user_id: ticket.faculty_reviewer_id,
+        title: `Task #${ticket.ticket_number} Marked Not Resolved`,
+        message: `${worker?.full_name} reported unresolved: ${reason}. Action required for reassignment.`,
+        link: `/faculty`,
+        is_read: false,
+        notification_type: "TASK_UNRESOLVED",
+        created_at: now,
+      });
+    }
+
+    // Notify student
+    this.notifications.unshift({
+      id: `notif-${Date.now() + 1}`,
+      user_id: ticket.student_id,
+      title: `Update on Query #${ticket.ticket_number}`,
+      message: "The assigned maintenance technician reported this issue requires additional resources and faculty reassignment.",
+      link: `/student/tickets/${ticket.id}`,
+      is_read: false,
+      notification_type: "STATUS_CHANGED",
+      created_at: now,
+    });
+
+    return { success: true, ticket };
+  }
+
+  public getWorkerTasks(workerId: string, statusFilter?: string): Ticket[] {
+    return this.tickets
+      .filter((t) => {
+        const matchesWorker = t.assigned_worker_id === workerId || t.assigned_to === workerId;
+        if (!matchesWorker) return false;
+        if (statusFilter && statusFilter !== "ALL") {
+          return t.status === statusFilter;
+        }
+        return true;
+      })
+      .map((t) => this.sanitizeTicketForViewer(t, workerId, "WORKER"));
+  }
+
+  public getQRCodes(): QRCodeConfig[] {
+    return [...this.qrCodes];
+  }
+
+  public createQRCode(data: {
+    title: string;
+    targetUrl: string;
+    building?: string;
+    room?: string;
+  }): QRCodeConfig {
+    const config: QRCodeConfig = {
+      id: `qr-${Date.now()}`,
+      title: data.title,
+      target_url: data.targetUrl,
+      building: data.building || null,
+      room: data.room || null,
+      scan_count: 0,
+      created_at: new Date().toISOString(),
+    };
+    this.qrCodes.unshift(config);
+    return config;
+  }
+
+  public getWorkerTaskUpdates(ticketId?: string): WorkerTaskUpdate[] {
+    if (ticketId) {
+      return this.workerTaskUpdates.filter((u) => u.ticket_id === ticketId);
+    }
+    return [...this.workerTaskUpdates];
+  }
+
   public assignTicket(
     ticketId: string,
     assignedToId: string,
@@ -537,51 +1204,12 @@ class DataRepository {
     assignmentType: "MANUAL" | "AUTO_AI" | "ESCALATED" = "MANUAL",
     reason?: string
   ): { success: boolean; error?: string; ticket?: Ticket } {
-    const ticket = this.getTicketById(ticketId);
-    if (!ticket) return { success: false, error: "Ticket not found." };
-
-    const targetStaff = this.getProfileById(assignedToId);
-    if (!targetStaff || (targetStaff.role !== "STAFF" && targetStaff.role !== "DEPARTMENT_HEAD")) {
-      return { success: false, error: "Invalid staff member for assignment." };
-    }
-
-    const assigner = this.getProfileById(assignedById);
-
-    ticket.assigned_to = targetStaff.id;
-    ticket.assigned_staff_name = targetStaff.full_name;
-    if (ticket.status === "SUBMITTED" || ticket.status === "TRIAGED") {
-      ticket.status = "ASSIGNED";
-    }
-    ticket.updated_at = new Date().toISOString();
-
-    const historyItem: TicketStatusHistoryItem = {
-      id: `hist-${Date.now()}`,
-      ticket_id: ticket.id,
-      changed_by: assigner?.id || null,
-      changer_name: assigner?.full_name || "System Router",
-      changer_role: assigner?.role || null,
-      old_status: ticket.status,
-      new_status: "ASSIGNED",
-      reason: reason || `Assigned to ${targetStaff.full_name} (${assignmentType})`,
-      created_at: new Date().toISOString(),
-    };
-
-    if (!ticket.history) ticket.history = [];
-    ticket.history.push(historyItem);
-
-    // Notify staff
-    this.notifications.unshift({
-      id: `notif-${Date.now()}`,
-      user_id: targetStaff.id,
-      title: `Ticket ${ticket.ticket_number} Assigned to You`,
-      message: `${ticket.subject} (Priority: ${ticket.priority})`,
-      link: `/staff/tickets/${ticket.id}`,
-      is_read: false,
-      notification_type: "TICKET_ASSIGNED",
-      created_at: new Date().toISOString(),
+    return this.assignTicketToWorker({
+      ticketId,
+      facultyId: assignedById,
+      workerId: assignedToId,
+      facultyNote: reason,
     });
-
-    return { success: true, ticket };
   }
 
   public addTicketMessage(
@@ -888,13 +1516,52 @@ class DataRepository {
 
   public getStats() {
     const total = this.tickets.length;
-    const open = this.tickets.filter((t) =>
-      ["SUBMITTED", "TRIAGED", "ASSIGNED", "IN_PROGRESS", "WAITING_FOR_STUDENT", "WAITING_FOR_APPROVAL", "REOPENED", "ESCALATED"].includes(t.status)
+    const awaitingFacultyReview = this.tickets.filter((t) =>
+      ["SUBMITTED", "REQUIRES_REASSIGNMENT", "NOT_RESOLVED"].includes(t.status)
     ).length;
-    const inProgress = this.tickets.filter((t) => t.status === "IN_PROGRESS").length;
-    const waitingApproval = this.tickets.filter((t) => t.status === "WAITING_FOR_APPROVAL").length;
+    const underFacultyReview = this.tickets.filter((t) => t.status === "UNDER_FACULTY_REVIEW").length;
+    const awaitingWorkerAssignment = this.tickets.filter((t) => t.status === "READY_FOR_ASSIGNMENT").length;
+    const assignedToWorkers = this.tickets.filter((t) =>
+      ["ASSIGNED_TO_WORKER", "WORKER_ACCEPTED", "ASSIGNED"].includes(t.status)
+    ).length;
+    const inProgress = this.tickets.filter((t) =>
+      ["IN_PROGRESS", "WAITING_FOR_PARTS_OR_RESOURCES"].includes(t.status)
+    ).length;
+    const notResolved = this.tickets.filter((t) => t.status === "NOT_RESOLVED").length;
     const resolved = this.tickets.filter((t) => ["RESOLVED", "CLOSED"].includes(t.status)).length;
+    const closed = this.tickets.filter((t) => t.status === "CLOSED").length;
     const escalated = this.tickets.filter((t) => t.status === "ESCALATED").length;
+
+    const now = Date.now();
+    const overdueCount = this.tickets.filter((t) => {
+      if (!t.sla_due_at || ["RESOLVED", "CLOSED"].includes(t.status)) return false;
+      return new Date(t.sla_due_at).getTime() < now;
+    }).length;
+
+    // Calculate durations
+    const reviewDurations: number[] = [];
+    const resolutionDurations: number[] = [];
+
+    for (const t of this.tickets) {
+      if (t.faculty_review_started_at && t.faculty_review_completed_at) {
+        const diffMs = new Date(t.faculty_review_completed_at).getTime() - new Date(t.faculty_review_started_at).getTime();
+        reviewDurations.push(diffMs / 3600000);
+      }
+      if (t.work_started_at && t.resolved_at) {
+        const diffMs = new Date(t.resolved_at).getTime() - new Date(t.work_started_at).getTime();
+        resolutionDurations.push(diffMs / 3600000);
+      }
+    }
+
+    const avgFacultyReviewDurationHours =
+      reviewDurations.length > 0
+        ? Number((reviewDurations.reduce((a, b) => a + b, 0) / reviewDurations.length).toFixed(1))
+        : 1.5;
+
+    const avgWorkerResolutionDurationHours =
+      resolutionDurations.length > 0
+        ? Number((resolutionDurations.reduce((a, b) => a + b, 0) / resolutionDurations.length).toFixed(1))
+        : 3.2;
 
     const avgRating =
       this.feedbackList.length > 0
@@ -904,15 +1571,22 @@ class DataRepository {
               this.feedbackList.length
             ).toFixed(1)
           )
-        : 0;
+        : 5.0;
 
     return {
       total,
-      open,
+      awaitingFacultyReview,
+      underFacultyReview,
+      awaitingWorkerAssignment,
+      assignedToWorkers,
       inProgress,
-      waitingApproval,
+      notResolved,
       resolved,
+      closed,
       escalated,
+      overdueCount,
+      avgFacultyReviewDurationHours,
+      avgWorkerResolutionDurationHours,
       resolutionRate: total > 0 ? Math.round((resolved / total) * 100) : 0,
       averageRating: avgRating,
       totalFeedback: this.feedbackList.length,

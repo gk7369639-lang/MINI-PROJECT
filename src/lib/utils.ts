@@ -31,6 +31,14 @@ export function formatDate(dateString: string | null | undefined): string {
   }
 }
 
+export const formatDateTime = formatDate;
+
+export function isTicketOverdue(slaDueAt?: string | null, status?: TicketStatus): boolean {
+  if (!slaDueAt) return false;
+  if (status === "RESOLVED" || status === "CLOSED") return false;
+  return new Date(slaDueAt).getTime() < Date.now();
+}
+
 export function formatRelativeTime(dateString: string | null | undefined): string {
   if (!dateString) return "N/A";
   try {

@@ -24,11 +24,13 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Unauthorized access to ticket." }, { status: 403 });
     }
 
-    // Never expose internal notes to student
-    const sanitizedTicket = {
-      ...ticket,
-      internal_notes: user.role === "STUDENT" ? [] : ticket.internal_notes,
-    };
+    // Role check: worker can only view tickets assigned to them
+    if (user.role === "WORKER" && ticket.assigned_worker_id !== user.id && ticket.assigned_to !== user.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized access to task." }, { status: 403 });
+    }
+
+    // Never expose student identity to faculty, workers, or admins; mask internal notes for students
+    const sanitizedTicket = db.sanitizeTicketForViewer(ticket, user.id, user.role);
 
     return NextResponse.json({ success: true, ticket: sanitizedTicket });
   } catch (err: any) {
@@ -56,23 +58,25 @@ export async function PATCH(
 
     // Handle Assignment
     if (body.assignedTo) {
-      if (user.role === "STUDENT") {
-        return NextResponse.json({ success: false, error: "Students cannot assign tickets." }, { status: 403 });
+      if (user.role === "STUDENT" || user.role === "WORKER") {
+        return NextResponse.json({ success: false, error: "Unauthorized to assign tasks." }, { status: 403 });
       }
       const assignResult = db.assignTicket(ticket.id, body.assignedTo, user.id, "MANUAL", body.reason);
-      if (!assignResult.success) {
+      if (!assignResult.success || !assignResult.ticket) {
         return NextResponse.json({ success: false, error: assignResult.error }, { status: 400 });
       }
-      return NextResponse.json({ success: true, ticket: assignResult.ticket });
+      const sanitized = db.sanitizeTicketForViewer(assignResult.ticket, user.id, user.role);
+      return NextResponse.json({ success: true, ticket: sanitized });
     }
 
     // Handle Status Transition
     if (body.status) {
       const updateResult = db.updateTicketStatus(ticket.id, body.status, body.reason || "Status updated", user.id);
-      if (!updateResult.success) {
+      if (!updateResult.success || !updateResult.ticket) {
         return NextResponse.json({ success: false, error: updateResult.error }, { status: 400 });
       }
-      return NextResponse.json({ success: true, ticket: updateResult.ticket });
+      const sanitized = db.sanitizeTicketForViewer(updateResult.ticket, user.id, user.role);
+      return NextResponse.json({ success: true, ticket: sanitized });
     }
 
     return NextResponse.json({ success: false, error: "No valid action provided." }, { status: 400 });

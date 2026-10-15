@@ -47,13 +47,15 @@ export default function StudentTicketDetailPage() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
 
-  const activeUserId = "user-student-1";
+  const [activeUserId, setActiveUserId] = useState("user-student-1");
 
   const fetchTicket = async () => {
     try {
       setLoading(true);
+      const savedId = localStorage.getItem("sqrp_active_user_id") || "user-student-1";
+      setActiveUserId(savedId);
       const res = await fetch(`/api/tickets/${ticketId}`, {
-        headers: { "x-user-id": activeUserId },
+        headers: { "x-user-id": savedId },
       });
       const data = await res.json();
       if (data.success && data.ticket) {
@@ -275,12 +277,23 @@ export default function StudentTicketDetailPage() {
           </div>
         </div>
 
+        {/* Confidential Protection Banner */}
+        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Confidential Student Query Protected</span>
+          </div>
+          <span className="text-[11px] text-emerald-700 dark:text-emerald-400">
+            Identity shielded from faculty and workers
+          </span>
+        </div>
+
         {/* Resolution Banner if Resolved or Closed */}
         {ticket.resolution_summary && (
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1 animate-fade-in">
             <div className="flex items-center gap-2 font-bold text-xs text-emerald-800">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Faculty Resolution Summary</span>
+              <span>Maintenance Resolution Summary</span>
             </div>
             <p className="text-xs leading-relaxed text-emerald-950 pl-6">
               {ticket.resolution_summary}
@@ -288,33 +301,101 @@ export default function StudentTicketDetailPage() {
           </div>
         )}
 
+        {/* Location & Facility Card */}
+        {(ticket.location_building || ticket.location_room) && (
+          <div className="p-4 bg-slate-50 dark:bg-navy-900/60 rounded-xl border border-slate-200 dark:border-navy-800 flex items-center gap-3">
+            <div className="p-2.5 bg-primary-100 dark:bg-primary-950 text-primary-700 rounded-lg shrink-0">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Designated Physical Location
+              </p>
+              <p className="text-xs font-bold text-navy-950 dark:text-white mt-0.5">
+                {ticket.location_building || "Main Campus"}
+                {ticket.location_room && <span className="text-primary-600 ml-2">• {ticket.location_room}</span>}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Image Attachment Preview */}
+        {ticket.image_url && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                Attached Problem Image
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <a
+                href={ticket.image_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block"
+              >
+                <img
+                  src={ticket.image_url}
+                  alt="Issue Attachment"
+                  className="max-h-60 rounded-xl border border-slate-200 object-cover shadow-sm hover:opacity-95"
+                />
+              </a>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Metadata Details Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-white border border-slate-200 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs">
           <div>
             <span className="text-slate-400 font-semibold block uppercase text-[10px]">Department</span>
-            <span className="font-bold text-slate-800 mt-0.5 block">{ticket.department_name || "General"}</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">{ticket.department_name || "General"}</span>
           </div>
           <div>
-            <span className="text-slate-400 font-semibold block uppercase text-[10px]">Assigned Staff</span>
-            <span className="font-bold text-slate-800 mt-0.5 block">{ticket.assigned_staff_name || "Department Queue"}</span>
+            <span className="text-slate-400 font-semibold block uppercase text-[10px]">Assigned Technician</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">{ticket.assigned_worker_name || ticket.assigned_staff_name || "Triage Queue"}</span>
           </div>
           <div>
             <span className="text-slate-400 font-semibold block uppercase text-[10px]">Submitted Date</span>
-            <span className="font-medium text-slate-700 mt-0.5 block">{formatDate(ticket.created_at)}</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300 mt-0.5 block">{formatDate(ticket.submitted_at || ticket.created_at)}</span>
           </div>
           <div>
             <span className="text-slate-400 font-semibold block uppercase text-[10px]">SLA Expected Resolution</span>
-            <span className="font-medium text-slate-700 mt-0.5 block">{formatDate(ticket.sla_due_at)}</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300 mt-0.5 block">{formatDate(ticket.sla_due_at)}</span>
+          </div>
+        </div>
+
+        {/* Maintenance Milestones Strip */}
+        <div className="p-4 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Maintenance Milestones
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+            <div className="p-2 rounded bg-slate-50 dark:bg-navy-950">
+              <span className="text-slate-400 block text-[10px]">Faculty Review</span>
+              <strong className="text-slate-700 dark:text-slate-300">{ticket.faculty_review_started_at ? formatRelativeTime(ticket.faculty_review_started_at) : "Pending"}</strong>
+            </div>
+            <div className="p-2 rounded bg-slate-50 dark:bg-navy-950">
+              <span className="text-slate-400 block text-[10px]">Technician Assigned</span>
+              <strong className="text-slate-700 dark:text-slate-300">{ticket.assigned_at ? formatRelativeTime(ticket.assigned_at) : "Pending"}</strong>
+            </div>
+            <div className="p-2 rounded bg-slate-50 dark:bg-navy-950">
+              <span className="text-slate-400 block text-[10px]">Work Started</span>
+              <strong className="text-slate-700 dark:text-slate-300">{ticket.work_started_at ? formatRelativeTime(ticket.work_started_at) : "Pending"}</strong>
+            </div>
+            <div className="p-2 rounded bg-slate-50 dark:bg-navy-950">
+              <span className="text-slate-400 block text-[10px]">Final Resolution</span>
+              <strong className="text-slate-700 dark:text-slate-300">{ticket.resolved_at ? formatRelativeTime(ticket.resolved_at) : "In Progress"}</strong>
+            </div>
           </div>
         </div>
 
         {/* Query Original Description */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold text-slate-800">Original Query Description</CardTitle>
+            <CardTitle className="text-sm font-bold text-slate-800 dark:text-white">Original Query Description</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs leading-relaxed text-slate-700 whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line bg-slate-50 dark:bg-navy-950 p-4 rounded-xl border border-slate-100 dark:border-navy-800">
               {ticket.description}
             </p>
           </CardContent>

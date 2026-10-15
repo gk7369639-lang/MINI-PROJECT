@@ -54,19 +54,32 @@ export function Sidebar({ role = "STUDENT", isOpen, onClose }: SidebarProps) {
     { label: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   ];
 
+  const facultyLinks: SidebarLink[] = [
+    { label: "Review & Triage Desk", href: "/faculty", icon: Inbox, highlight: true },
+    { label: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
+  ];
+
+  const workerLinks: SidebarLink[] = [
+    { label: "Assigned Tasks", href: "/worker", icon: CheckCircle, highlight: true },
+    { label: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
+  ];
+
   const adminLinks: SidebarLink[] = [
     { label: "System Analytics", href: "/admin", icon: LayoutDashboard },
+    { label: "QR Code Generator", href: "/admin/qr-codes", icon: PlusCircle, badge: "QR Hub" },
     { label: "User Management", href: "/admin/users", icon: Users },
-    { label: "Departments & SLAs", href: "/admin/departments", icon: Building2 },
+    { label: "Departments & Facilities", href: "/admin/departments", icon: Building2 },
     { label: "Audit Logs", href: "/admin/audit-logs", icon: History },
     { label: "Export Reports", href: "/admin/reports", icon: FileSpreadsheet },
     { label: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   ];
 
   let links: SidebarLink[] = studentLinks;
-  if (role === "STAFF") links = staffLinks;
-  if (role === "DEPARTMENT_HEAD") links = headLinks;
-  if (role === "ADMIN") links = adminLinks;
+  if (role === "FACULTY") links = facultyLinks;
+  else if (role === "WORKER") links = workerLinks;
+  else if (role === "STAFF") links = facultyLinks; // Staff behaves as faculty review desk
+  else if (role === "DEPARTMENT_HEAD") links = headLinks;
+  else if (role === "ADMIN" || role === "QUERY_SYSTEM_ADMIN") links = adminLinks;
 
   return (
     <>

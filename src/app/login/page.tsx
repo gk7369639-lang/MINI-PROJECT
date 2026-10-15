@@ -8,8 +8,12 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardFooter } from "@/components/ui/Card";
 
-export default function LoginPage() {
+import { useSearchParams } from "next/navigation";
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +40,8 @@ export default function LoginPage() {
       localStorage.setItem("sqrp_active_user_id", data.user.id);
       localStorage.setItem("sqrp_active_role", data.user.role);
 
-      router.push(data.redirectUrl || "/student");
+      const target = returnUrl && returnUrl.startsWith("/") ? returnUrl : (data.redirectUrl || "/student");
+      router.push(target);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred during sign in.");
     } finally {
@@ -113,5 +118,13 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-navy-950 flex items-center justify-center text-xs text-slate-500">Loading portal...</div>}>
+      <LoginForm />
+    </React.Suspense>
   );
 }

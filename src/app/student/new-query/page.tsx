@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Sparkles,
@@ -13,22 +13,36 @@ import {
   Loader2,
   FileText,
   Lightbulb,
+  MapPin,
+  ShieldCheck,
+  Building2,
+  QrCode,
+  Image as ImageIcon,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
-import { Department, SupportCategory, TicketPriority, KnowledgeBaseArticle } from "@/types";
+import { Department, Category, TicketPriority, KnowledgeBaseArticle } from "@/types";
 
-export default function NewQueryPage() {
+function NewQueryContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read location query parameters from QR code scan
+  const qrBuilding = searchParams.get("building") || "";
+  const qrRoom = searchParams.get("room") || "";
+
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [categories, setCategories] = useState<SupportCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [priority, setPriority] = useState<TicketPriority>("MEDIUM");
+  const [locationBuilding, setLocationBuilding] = useState(qrBuilding || "Aryabhata Academic Complex");
+  const [locationRoom, setLocationRoom] = useState(qrRoom || "");
+  const [imageUrl, setImageUrl] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiChecking, setIsAiChecking] = useState(false);
@@ -48,6 +62,9 @@ export default function NewQueryPage() {
     const saved = localStorage.getItem("sqrp_active_user_id");
     if (saved) setActiveUserId(saved);
 
+    if (qrBuilding) setLocationBuilding(qrBuilding);
+    if (qrRoom) setLocationRoom(qrRoom);
+
     fetch("/api/departments")
       .then((res) => res.json())
       .then((data) => {
@@ -57,7 +74,7 @@ export default function NewQueryPage() {
         }
       })
       .catch((err) => console.error("Failed to load departments and categories", err));
-  }, []);
+  }, [qrBuilding, qrRoom]);
 
   const handleAiPreCheck = async () => {
     if (!subject || !description) {
@@ -115,6 +132,9 @@ export default function NewQueryPage() {
           department_id: departmentId || undefined,
           priority,
           student_id: activeUserId,
+          location_building: locationBuilding || undefined,
+          location_room: locationRoom || undefined,
+          image_url: imageUrl || undefined,
         }),
       });
 
@@ -144,21 +164,21 @@ export default function NewQueryPage() {
             </div>
             <div>
               <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">
-                Query Successfully Logged
+                Confidential Query Logged
               </span>
               <h2 className="text-2xl font-black text-navy-950 mt-1">
                 {successTicket.ticket_number}
               </h2>
               <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Your query has been validated, assigned a unique tracking token, and routed to the faculty workdesk with active SLA monitoring.
+                Your issue has been anonymously registered and queued for faculty review. Your identity remains 100% confidential.
               </p>
             </div>
             <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
               <Link href={`/student/tickets/${successTicket.id}`}>
-                <Button size="md">Track This Ticket</Button>
+                <Button size="md">Track Confidential Timeline</Button>
               </Link>
               <Link href="/student">
-                <Button variant="outline" size="md">Return to Dashboard</Button>
+                <Button variant="outline" size="md">Return to Student Dashboard</Button>
               </Link>
             </div>
           </Card>
@@ -178,12 +198,36 @@ export default function NewQueryPage() {
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-2xl font-black text-navy-950 dark:text-white tracking-tight">
-            Submit an Academic Support Query
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Our AI Triage system will review your query, classify the department, and assign an eligible faculty member.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h1 className="text-2xl font-black text-navy-950 dark:text-white tracking-tight">
+                Submit Confidential Query / Maintenance Issue
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">
+                Report academic issues, hostel maintenance, laboratory malfunctions, or facility repairs.
+              </p>
+            </div>
+
+            {(qrBuilding || qrRoom) && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300 border border-primary-200">
+                <QrCode className="w-4 h-4 text-primary-600" />
+                <span>Location prefilled from QR placard</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Confidentiality Guarantee Banner */}
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <p className="font-bold text-emerald-900 dark:text-emerald-300">
+              Strict Student Privacy & Confidentiality Shield
+            </p>
+            <p className="text-emerald-800 dark:text-emerald-400 mt-0.5 leading-relaxed">
+              Your name, email address, and student registration number are never revealed to faculty reviewers or maintenance technicians. Only the issue description and location are shared for physical resolution.
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -246,11 +290,51 @@ export default function NewQueryPage() {
         <Card className="shadow-sm">
           <CardContent className="p-6 sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Location Fields */}
+              <div className="p-4 bg-slate-50 dark:bg-navy-900/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-navy-950 dark:text-white uppercase tracking-wider">
+                  <MapPin className="w-4 h-4 text-primary-600" />
+                  <span>Campus Physical Location (For On-Site Support)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Campus Building
+                    </label>
+                    <select
+                      value={locationBuilding}
+                      onChange={(e) => setLocationBuilding(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="Aryabhata Academic Complex">Aryabhata Academic Complex</option>
+                      <option value="Ramanujan Science & Technology Block">Ramanujan Science & Technology Block</option>
+                      <option value="Central Library & Knowledge Hub">Central Library & Knowledge Hub</option>
+                      <option value="CV Raman Boys Hostel">CV Raman Boys Hostel</option>
+                      <option value="Sarojini Naidu Girls Hostel">Sarojini Naidu Girls Hostel</option>
+                      <option value="Student Sports & Recreational Pavilion">Student Sports & Recreational Pavilion</option>
+                      <option value="Administrative Secretariat">Administrative Secretariat</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Room / Facility / Lab Number
+                    </label>
+                    <Input
+                      placeholder="e.g. Lab 302, Bench 14 or Room 204"
+                      value={locationRoom}
+                      onChange={(e) => setLocationRoom(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <Input
-                  label="Subject / Brief Summary"
+                  label="Subject / Problem Summary"
                   required
-                  placeholder="e.g. Medical OD Condonation for Hospitalization in CS301"
+                  placeholder="e.g. AC unit leaking water and flickering lab monitor"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   helperText="Be specific. Minimum 5 characters."
@@ -259,7 +343,7 @@ export default function NewQueryPage() {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Detailed Query Description
                   </label>
                   <button
@@ -279,25 +363,38 @@ export default function NewQueryPage() {
                 <textarea
                   rows={5}
                   required
-                  placeholder="Provide complete context, dates, transaction reference numbers, course codes, or faculty names..."
+                  placeholder="Provide complete context, symptoms, affected equipment numbers, or urgency details..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full rounded-lg border border-slate-300 dark:border-navy-700 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-navy-900"
                 />
                 <p className="text-xs text-slate-400 text-right">
                   {description.length} / 3000 characters (minimum 20)
                 </p>
               </div>
 
+              {/* Photo Image Attachment URL */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Photo Attachment URL (Optional)
+                </label>
+                <Input
+                  placeholder="https://example.com/uploads/issue-photo.jpg"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  helperText="Paste direct image link of the facility problem or equipment fault."
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Department (Optional - Auto-routed if empty)
                   </label>
                   <select
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
-                    className="w-full h-10 rounded-lg border border-slate-300 px-3 text-xs bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full h-10 rounded-lg border border-slate-300 dark:border-navy-700 px-3 text-xs bg-white dark:bg-navy-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">Auto-Detect via AI</option>
                     {departments.map((dept) => (
@@ -309,13 +406,13 @@ export default function NewQueryPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Support Category (Optional)
                   </label>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full h-10 rounded-lg border border-slate-300 px-3 text-xs bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full h-10 rounded-lg border border-slate-300 dark:border-navy-700 px-3 text-xs bg-white dark:bg-navy-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">Auto-Detect via AI</option>
                     {categories.map((cat) => (
@@ -328,8 +425,8 @@ export default function NewQueryPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                  Self-Assessed Priority
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Self-Assessed Urgency
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {(["LOW", "MEDIUM", "HIGH", "URGENT"] as TicketPriority[]).map((p) => (
@@ -339,24 +436,14 @@ export default function NewQueryPage() {
                       onClick={() => setPriority(p)}
                       className={`py-2 text-xs font-bold rounded-lg border transition-all ${
                         priority === p
-                          ? "bg-navy-900 text-white border-navy-900 shadow-sm"
-                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                          ? "bg-navy-900 text-white border-navy-900 shadow-sm dark:bg-white dark:text-navy-950"
+                          : "border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-900"
                       }`}
                     >
                       {p}
                     </button>
                   ))}
                 </div>
-              </div>
-
-              <div className="p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 text-center space-y-1">
-                <UploadCloud className="w-6 h-6 text-slate-400 mx-auto" />
-                <p className="text-xs font-semibold text-slate-700">
-                  Supporting Attachments (Optional)
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  PDF, PNG, JPG receipts or medical certificates up to 5MB
-                </p>
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-3">
@@ -368,9 +455,9 @@ export default function NewQueryPage() {
                 <Button
                   type="submit"
                   isLoading={isSubmitting}
-                  className="shadow-md shadow-primary-600/20"
+                  className="shadow-md shadow-primary-600/20 bg-primary-600 hover:bg-primary-700 text-white"
                 >
-                  Submit Query to University Desk
+                  Submit Confidential Query
                 </Button>
               </div>
             </form>
@@ -378,5 +465,13 @@ export default function NewQueryPage() {
         </Card>
       </div>
     </AppShell>
+  );
+}
+
+export default function NewQueryPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Loading query form...</div>}>
+      <NewQueryContent />
+    </React.Suspense>
   );
 }

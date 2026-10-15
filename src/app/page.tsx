@@ -258,15 +258,18 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Student */}
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-md transition-shadow border-t-4 border-t-primary-600">
               <CardContent className="p-6 space-y-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-300 flex items-center justify-center font-bold">
                   <GraduationCap className="w-5 h-5" />
                 </div>
                 <div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Confidential</span>
+                  </div>
                   <h3 className="font-bold text-base text-navy-900 dark:text-white">Student Portal</h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Submit queries with AI assistance, track status in real-time, reply to staff, confirm resolution, and rate service.
+                    Scan room QR codes, submit maintenance and academic queries anonymously, and track real-time resolution progress.
                   </p>
                 </div>
                 <Link href="/student" className="block pt-2">
@@ -277,56 +280,56 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
-            {/* Staff */}
-            <Card className="hover:shadow-md transition-shadow">
+            {/* Faculty Review Desk */}
+            <Card className="hover:shadow-md transition-shadow border-t-4 border-t-indigo-600">
               <CardContent className="p-6 space-y-4">
                 <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 flex items-center justify-center font-bold">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-navy-900 dark:text-white">Staff Workdesk</h3>
+                  <h3 className="font-bold text-base text-navy-900 dark:text-white">Faculty Triage Desk</h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Manage department queue, claim tickets, write quarantined internal notes, request approvals, and record resolution.
+                    Inspect incoming confidential queries, categorize issues, prioritize urgency, and allocate field maintenance technicians.
                   </p>
                 </div>
-                <Link href="/staff" className="block pt-2">
+                <Link href="/faculty" className="block pt-2">
                   <Button variant="outline" size="sm" className="w-full">
-                    Enter Staff Workdesk
+                    Enter Faculty Review Desk
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
-            {/* Head */}
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6 space-y-4">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-navy-900 dark:text-white">Department Head</h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Vetting approval-required cases (attendance condonation, fee waivers), monitoring faculty load, and escalating bottlenecks.
-                  </p>
-                </div>
-                <Link href="/department-head" className="block pt-2">
-                  <Button variant="outline" size="sm" className="w-full">
-                    Enter Head Portal
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Admin */}
-            <Card className="hover:shadow-md transition-shadow">
+            {/* Maintenance Worker */}
+            <Card className="hover:shadow-md transition-shadow border-t-4 border-t-emerald-600">
               <CardContent className="p-6 space-y-4">
                 <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center font-bold">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-navy-900 dark:text-white">Worker Field Portal</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Technician mobile deck: view location &amp; facility details, accept tasks, start work on site, log parts, and submit resolution summaries.
+                  </p>
+                </div>
+                <Link href="/worker" className="block pt-2">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Enter Worker Portal
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Query System Admin */}
+            <Card className="hover:shadow-md transition-shadow border-t-4 border-t-purple-600">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center font-bold">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-navy-900 dark:text-white">Admin Analytics</h3>
+                  <h3 className="font-bold text-base text-navy-900 dark:text-white">Query System Admin</h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Comprehensive SLA adherence metrics, user permissions directory, department categories, audit logs, and CSV reporting.
+                    Deploy campus QR code placards, monitor institutional SLA adherence, track worker/faculty workload, and export confidential logs.
                   </p>
                 </div>
                 <Link href="/admin" className="block pt-2">

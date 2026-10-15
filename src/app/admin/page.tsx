@@ -85,6 +85,17 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
+        {/* Confidentiality Assurance Banner */}
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300 font-bold">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>Campus Student Privacy Shield Active</span>
+          </div>
+          <p className="text-emerald-800 dark:text-emerald-400 text-[11px]">
+            Student personal identification details (names, emails, roll numbers) are automatically redacted in all faculty, worker, and admin review tables.
+          </p>
+        </div>
+
         {/* Global Key Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-l-4 border-l-primary-600">
@@ -182,6 +193,17 @@ export default function AdminDashboardPage() {
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
                 <Link
+                  href="/admin/qr-codes"
+                  className="p-4 rounded-xl border border-primary-300 bg-primary-50/50 hover:bg-primary-100/60 transition-all text-left"
+                >
+                  <div className="w-5 h-5 rounded bg-primary-600 text-white flex items-center justify-center text-[10px] font-black mb-2">
+                    QR
+                  </div>
+                  <h4 className="font-bold text-xs text-navy-950">Campus QR Placards</h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Generate printable room placards</p>
+                </Link>
+
+                <Link
                   href="/admin/users"
                   className="p-4 rounded-xl border border-slate-200 hover:border-primary-500 hover:bg-primary-50/40 transition-all text-left"
                 >
@@ -206,15 +228,6 @@ export default function AdminDashboardPage() {
                   <History className="w-5 h-5 text-purple-600 mb-2" />
                   <h4 className="font-bold text-xs text-navy-950">Security Audit Logs</h4>
                   <p className="text-[11px] text-slate-500 mt-0.5">Trace immutable operations</p>
-                </Link>
-
-                <Link
-                  href="/knowledge-base"
-                  className="p-4 rounded-xl border border-slate-200 hover:border-primary-500 hover:bg-primary-50/40 transition-all text-left"
-                >
-                  <FileSpreadsheet className="w-5 h-5 text-emerald-600 mb-2" />
-                  <h4 className="font-bold text-xs text-navy-950">Knowledge Base</h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Review student FAQ catalog</p>
                 </Link>
               </div>
             </CardContent>
